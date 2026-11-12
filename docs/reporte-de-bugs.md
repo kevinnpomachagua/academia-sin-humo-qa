@@ -34,6 +34,11 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   2. `POST /api/login` con ese usuario (200).
   3. `GET /api/auth/me` en el mismo contexto.
 - **Evidencia:** test `BUG? REQ-S01/S02 /api/auth/me debe devolver el usuario tras el login`; falla en `expect(body.realUser).not.toBeNull()` con `Received: null`. Request y response adjuntos en el reporte de Playwright.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-01-auth-me.json`](evidencia/api/bug-01-auth-me.json)):
+  ```text
+  GET /api/auth/me
+  → 200 {"realUser": null}
+  ```
 - **Severidad y por qué:** Alta. Rompe la autenticación del lado del servidor y condiciona todos los flujos que dependen de la sesión (catálogo, progreso).
 - **Capa donde se detecta:** API
 
@@ -45,6 +50,11 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   1. Registrar y loguear un usuario nuevo (sin cursos completados).
   2. `POST /api/enroll` con `{ "courseId": "playwright-cero" }`.
 - **Evidencia:** test `BUG? REQ-C06/A03 enroll con prerrequisito pendiente debe responder 403`; falla con `Expected: 403, Received: 200`.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-02-enroll-prerrequisito.json`](evidencia/api/bug-02-enroll-prerrequisito.json)):
+  ```text
+  POST /api/enroll {"courseId": "playwright-cero"}
+  → 200 {"courseId": "playwright-cero", "status": "inscrito", "displayStatus": "inscrito", "message": "Inscripción exitosa a \"Playwright desde cero\""}
+  ```
 - **Severidad y por qué:** Alta. Cualquier cliente que llame a la API se salta la regla de negocio central de inscripción, aunque la UI la bloquee.
 - **Capa donde se detecta:** API
 
@@ -58,6 +68,13 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   3. `POST /api/enroll` con `programacion-qa` (200).
   4. `GET /api/courses` de nuevo.
 - **Evidencia:** test `BUG? REQ-C04 el cupo debe bajar en 1 tras inscribirse`; falla con `Expected: 19, Received: 20`. Adjunto `catalogo-antes-despues`.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-03-cupo.json`](evidencia/api/bug-03-cupo.json)):
+  ```text
+  GET /api/courses (antes)  → programacion-qa: maxStudents=20, enrolled=0, libres=20
+  POST /api/enroll {"courseId": "programacion-qa"}
+  → 200 {"courseId": "programacion-qa", "status": "inscrito", "displayStatus": "inscrito"}
+  GET /api/courses (después) → programacion-qa: maxStudents=20, enrolled=0, libres=20
+  ```
 - **Severidad y por qué:** Media. Los cupos nunca se agotan, así que la lista de espera no se activa y la información al estudiante es incorrecta.
 - **Capa donde se detecta:** API
 
@@ -67,6 +84,11 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 - **Comportamiento real:** responde 201 y crea la cuenta.
 - **Pasos para reproducir:** `POST /api/register` con una contraseña de 65 caracteres (nombre, email y edad válidos).
 - **Evidencia:** test `BUG? REQ-R04 contrasena de 65 caracteres debe rechazarse`; falla con `Expected: >= 400, Received: 201`. Los controles de 64 (aceptada) y 7 (rechazada) pasan, así que el defecto es solo el límite superior.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-04-password-65.json`](evidencia/api/bug-04-password-65.json)):
+  ```text
+  POST /api/register (contraseña de 65 caracteres)
+  → 201 {"message": "Registro exitoso", "user": {"name": "Lucía Mamani Flores", "email": "lucia.mamani.17944567719547@yopmail.com", "age": 31}}
+  ```
 - **Severidad y por qué:** Baja. Incumple el límite documentado, pero no compromete datos ni flujos.
 - **Capa donde se detecta:** API
 
@@ -80,6 +102,11 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   3. `POST /api/progress` con `{ courseId: "fundamentos", action: "abandonar" }` (200).
   4. `POST /api/progress` con `{ courseId: "fundamentos", action: "retomar" }`.
 - **Evidencia:** test `BUG? REQ-P02/P03 un curso Abandonado no debe pasar a En progreso`; falla con `Expected: >= 400, Received: 200`.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-05-abandonado-retomar.json`](evidencia/api/bug-05-abandonado-retomar.json)):
+  ```text
+  POST /api/progress {"courseId": "fundamentos", "action": "retomar"}
+  → 200 {"courseId": "fundamentos", "previousStatus": "abandonado", "currentStatus": "en-progreso", "message": "Transición exitosa: abandonado → en-progreso"}
+  ```
 - **Severidad y por qué:** Media. Abandonado es un estado terminal; permitir revivirlo rompe la máquina de estados y el avance posterior hacia certificados.
 - **Capa donde se detecta:** API
 
@@ -92,6 +119,13 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   2. `POST /api/progress` con las acciones `comenzar`, `completar` y `certificar` (todas 200; tras la primera certificación `certificates` es 1).
   3. Repetir `certificar`.
 - **Evidencia:** test `BUG? REQ-P04 certificar dos veces no debe duplicar certificados`; falla con `Expected: 1, Received: 2`.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-06-certificado-duplicado.json`](evidencia/api/bug-06-certificado-duplicado.json)):
+  ```text
+  POST /api/progress {"courseId": "fundamentos", "action": "certificar"}
+  → 200 {"previousStatus": "completado", "currentStatus": "certificado", "certificates": 1}
+  POST /api/progress {"courseId": "fundamentos", "action": "certificar"}
+  → 200 {"previousStatus": "certificado", "currentStatus": "certificado", "certificates": 2}
+  ```
 - **Severidad y por qué:** Media. Genera certificados duplicados, lo que afecta la integridad del registro académico.
 - **Capa donde se detecta:** API
 
@@ -153,6 +187,15 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   1. `POST /api/register` con nombre `Marcela Quispe Huamán`, contraseña `Lima#2026qa`, edad 29 y el email `usuario@`.
   2. Repetir con `lucia.mamani@yopmail`.
 - **Evidencia:** casos CP-13 (`usuario@` → 201) y CP-15 (`lucia.mamani@yopmail` → 201) en `docs/casos-de-prueba.md`, medidos con `tests/evidencia/ejecucion-casos.spec.ts`. También se aceptan `a@.com` (CP-69), `a@b.` (CP-70), `a@@b.com` (CP-71) y un email con espacio (CP-72); la spec no los nombra, pero contradicen "un @ seguido de un dominio con punto".
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-11-email-invalido.json`](evidencia/api/bug-11-email-invalido.json)):
+  ```text
+  POST /api/register email "usuario@"
+  → 201
+  POST /api/register email "lucia.mamani.179445677611913"
+  → 201
+  POST /api/register email "usuario"
+  → 422
+  ```
 - **Severidad y por qué:** Baja. Entran cuentas con emails inválidos, pero no se compromete ningún flujo; sí afecta a cualquier envío posterior al email.
 - **Capa donde se detecta:** API
 
@@ -176,6 +219,13 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   2. `POST /api/progress` con `comenzar` y `completar` (y, para el segundo caso, `certificar`).
   3. `POST /api/progress` con `{ courseId: "fundamentos", action: "comenzar" }`.
 - **Evidencia:** casos CP-62 (Completado → En progreso: 200, `en-progreso`) y CP-63 (Certificado → En progreso: 200, `en-progreso`). Mismo patrón que BUG-05. Los demás rechazos (CP-41, 43, 44, 60, 61, 64) sí devuelven error.
+- **Respuesta real** (completa en [`docs/evidencia/api/bug-13-transiciones-invalidas.json`](evidencia/api/bug-13-transiciones-invalidas.json)):
+  ```text
+  POST /api/progress {"courseId": "fundamentos", "action": "comenzar"}
+  → 200 {"previousStatus": "completado", "currentStatus": "en-progreso", "message": "Transición exitosa: completado → en-progreso"}
+  POST /api/progress {"courseId": "fundamentos", "action": "comenzar"}
+  → 200 {"previousStatus": "certificado", "currentStatus": "en-progreso", "message": "Transición exitosa: certificado → en-progreso"}
+  ```
 - **Severidad y por qué:** Media. Un certificado emitido puede volver a En progreso y generar otro después.
 - **Capa donde se detecta:** API
 

@@ -1,0 +1,76 @@
+{
+  "bug": "BUG-11",
+  "req": "REQ-R03",
+  "producto": "https://playground.calidadsinhumo.com",
+  "pasos": [
+    {
+      "paso": "registrar con email \"usuario@\" (esperado: rechazo)",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "password": "<omitida, 22 caracteres>",
+          "age": 31,
+          "email": "usuario@"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "usuario@",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "registrar con email sin punto en el dominio (esperado: rechazo)",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "password": "<omitida, 22 caracteres>",
+          "age": 31,
+          "email": "lucia.mamani.179445677611913@yopmail"
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.179445677611913@yopmail",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "control: el email \"usuario\" sí se rechaza",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "password": "<omitida, 22 caracteres>",
+          "age": 31,
+          "email": "usuario"
+        }
+      },
+      "response": {
+        "status": 422,
+        "body": {
+          "errors": {
+            "email": "El email no tiene un formato válido"
+          }
+        }
+      }
+    }
+  ]
+}

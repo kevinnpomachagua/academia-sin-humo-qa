@@ -1,0 +1,66 @@
+{
+  "bug": "BUG-01",
+  "req": "REQ-S01/S02",
+  "producto": "https://playground.calidadsinhumo.com",
+  "pasos": [
+    {
+      "paso": "registrar usuario",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "email": "lucia.mamani.17944567686781@yopmail.com",
+          "password": "<omitida, 21 caracteres>",
+          "age": 31
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567686781@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "iniciar sesión",
+      "request": {
+        "method": "POST",
+        "url": "/api/login",
+        "body": {
+          "email": "lucia.mamani.17944567686781@yopmail.com",
+          "password": "<omitida, 21 caracteres>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Login exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567686781@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "consultar la sesión (esperado: el usuario autenticado)",
+      "request": {
+        "method": "GET",
+        "url": "/api/auth/me"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "realUser": null
+        }
+      }
+    }
+  ]
+}

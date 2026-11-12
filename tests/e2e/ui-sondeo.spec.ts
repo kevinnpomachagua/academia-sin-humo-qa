@@ -42,8 +42,9 @@ test.describe('Sondeo UI contra la spec', () => {
       const respuesta = page.waitForResponse((r) => r.url().includes('/api/login') && r.request().method() === 'POST');
       await boton.click({ timeout: 5_000 });
       await respuesta;
-      await page.waitForTimeout(500); // deja que la UI refleje el estado
-      if (await boton.isDisabled()) { bloqueadoTras = intento; break; }
+      // Sondeo con tope de 1 s (no es una espera fija): si el boton no se deshabilita, sigue con el siguiente intento
+      const bloqueado = await expect.poll(() => boton.isDisabled(), { timeout: 1_000 }).toBe(true).then(() => true, () => false);
+      if (bloqueado) { bloqueadoTras = intento; break; }
     }
     test.info().annotations.push({ type: 'bloqueado-tras', description: String(bloqueadoTras) });
 

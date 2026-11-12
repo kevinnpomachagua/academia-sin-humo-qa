@@ -1,0 +1,124 @@
+{
+  "bug": "BUG-03",
+  "req": "REQ-C04",
+  "producto": "https://playground.calidadsinhumo.com",
+  "pasos": [
+    {
+      "paso": "registrar usuario",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "email": "lucia.mamani.17944567705285@yopmail.com",
+          "password": "<omitida, 21 caracteres>",
+          "age": 31
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567705285@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "iniciar sesión",
+      "request": {
+        "method": "POST",
+        "url": "/api/login",
+        "body": {
+          "email": "lucia.mamani.17944567705285@yopmail.com",
+          "password": "<omitida, 21 caracteres>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Login exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567705285@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "catálogo ANTES de inscribirse",
+      "request": {
+        "method": "GET",
+        "url": "/api/courses"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "curso": {
+            "id": "programacion-qa",
+            "title": "Programación básica para QA (que quiere automatizar) con IA",
+            "description": "Aprende a leer y escribir el código que vive dentro de tus tests: variables, lógica, datos y errores, con ejercicios que ejecutas en el navegador. Terminas leyendo tests reales de Playwright línea por línea, con la IA como copiloto que diriges tú.",
+            "level": "principiante",
+            "duration": "5 semanas",
+            "prerequisiteId": null,
+            "maxStudents": 20,
+            "enrolled": 0,
+            "icon": "👩‍💻",
+            "libres": 20
+          }
+        }
+      }
+    },
+    {
+      "paso": "inscribir en \"programacion-qa\" (esperado: 200 inscrito)",
+      "request": {
+        "method": "POST",
+        "url": "/api/enroll",
+        "body": {
+          "courseId": "programacion-qa"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "programacion-qa",
+          "status": "inscrito",
+          "displayStatus": "inscrito",
+          "progress": 0,
+          "certificates": 0,
+          "enrolledAt": 1794456771208,
+          "message": "Inscripción exitosa a \"Programación básica para QA (que quiere automatizar) con IA\"",
+          "spotsLeft": 20
+        }
+      }
+    },
+    {
+      "paso": "catálogo DESPUÉS de inscribirse (esperado: un cupo menos)",
+      "request": {
+        "method": "GET",
+        "url": "/api/courses"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "curso": {
+            "id": "programacion-qa",
+            "title": "Programación básica para QA (que quiere automatizar) con IA",
+            "description": "Aprende a leer y escribir el código que vive dentro de tus tests: variables, lógica, datos y errores, con ejercicios que ejecutas en el navegador. Terminas leyendo tests reales de Playwright línea por línea, con la IA como copiloto que diriges tú.",
+            "level": "principiante",
+            "duration": "5 semanas",
+            "prerequisiteId": null,
+            "maxStudents": 20,
+            "enrolled": 0,
+            "icon": "👩‍💻",
+            "libres": 20
+          }
+        }
+      }
+    }
+  ]
+}

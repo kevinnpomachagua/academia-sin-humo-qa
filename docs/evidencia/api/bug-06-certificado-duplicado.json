@@ -1,0 +1,164 @@
+{
+  "bug": "BUG-06",
+  "req": "REQ-P04",
+  "producto": "https://playground.calidadsinhumo.com",
+  "pasos": [
+    {
+      "paso": "registrar usuario",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "email": "lucia.mamani.179445677380310@yopmail.com",
+          "password": "<omitida, 22 caracteres>",
+          "age": 31
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.179445677380310@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "iniciar sesión",
+      "request": {
+        "method": "POST",
+        "url": "/api/login",
+        "body": {
+          "email": "lucia.mamani.179445677380310@yopmail.com",
+          "password": "<omitida, 22 caracteres>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Login exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.179445677380310@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "inscribir \"fundamentos\"",
+      "request": {
+        "method": "POST",
+        "url": "/api/enroll",
+        "body": {
+          "courseId": "fundamentos"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "status": "inscrito",
+          "displayStatus": "inscrito",
+          "progress": 0,
+          "certificates": 0,
+          "enrolledAt": 1794456774243,
+          "message": "Inscripción exitosa a \"Fundamentos de Testing\"",
+          "spotsLeft": 6
+        }
+      }
+    },
+    {
+      "paso": "comenzar",
+      "request": {
+        "method": "POST",
+        "url": "/api/progress",
+        "body": {
+          "courseId": "fundamentos",
+          "action": "comenzar"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "previousStatus": "inscrito",
+          "currentStatus": "en-progreso",
+          "progress": 10,
+          "certificates": 0,
+          "message": "Transición exitosa: inscrito → en-progreso"
+        }
+      }
+    },
+    {
+      "paso": "completar",
+      "request": {
+        "method": "POST",
+        "url": "/api/progress",
+        "body": {
+          "courseId": "fundamentos",
+          "action": "completar"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "previousStatus": "en-progreso",
+          "currentStatus": "completado",
+          "progress": 100,
+          "certificates": 0,
+          "message": "Transición exitosa: en-progreso → completado"
+        }
+      }
+    },
+    {
+      "paso": "certificar",
+      "request": {
+        "method": "POST",
+        "url": "/api/progress",
+        "body": {
+          "courseId": "fundamentos",
+          "action": "certificar"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "previousStatus": "completado",
+          "currentStatus": "certificado",
+          "progress": 100,
+          "certificates": 1,
+          "message": "Transición exitosa: completado → certificado"
+        }
+      }
+    },
+    {
+      "paso": "certificar por segunda vez (esperado: el total sigue en 1)",
+      "request": {
+        "method": "POST",
+        "url": "/api/progress",
+        "body": {
+          "courseId": "fundamentos",
+          "action": "certificar"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "previousStatus": "certificado",
+          "currentStatus": "certificado",
+          "progress": 100,
+          "certificates": 2,
+          "message": "Transición exitosa: certificado → certificado"
+        }
+      }
+    }
+  ]
+}

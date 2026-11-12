@@ -1,0 +1,120 @@
+{
+  "bug": "BUG-05",
+  "req": "REQ-P02/P03",
+  "producto": "https://playground.calidadsinhumo.com",
+  "pasos": [
+    {
+      "paso": "registrar usuario",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "email": "lucia.mamani.17944567724288@yopmail.com",
+          "password": "<omitida, 21 caracteres>",
+          "age": 31
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567724288@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "iniciar sesión",
+      "request": {
+        "method": "POST",
+        "url": "/api/login",
+        "body": {
+          "email": "lucia.mamani.17944567724288@yopmail.com",
+          "password": "<omitida, 21 caracteres>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Login exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567724288@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "inscribir \"fundamentos\"",
+      "request": {
+        "method": "POST",
+        "url": "/api/enroll",
+        "body": {
+          "courseId": "fundamentos"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "status": "inscrito",
+          "displayStatus": "inscrito",
+          "progress": 0,
+          "certificates": 0,
+          "enrolledAt": 1794456772836,
+          "message": "Inscripción exitosa a \"Fundamentos de Testing\"",
+          "spotsLeft": 6
+        }
+      }
+    },
+    {
+      "paso": "abandonar",
+      "request": {
+        "method": "POST",
+        "url": "/api/progress",
+        "body": {
+          "courseId": "fundamentos",
+          "action": "abandonar"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "previousStatus": "inscrito",
+          "currentStatus": "abandonado",
+          "progress": 0,
+          "certificates": 0,
+          "message": "Transición exitosa: inscrito → abandonado"
+        }
+      }
+    },
+    {
+      "paso": "retomar un curso abandonado (esperado: rechazo 4xx)",
+      "request": {
+        "method": "POST",
+        "url": "/api/progress",
+        "body": {
+          "courseId": "fundamentos",
+          "action": "retomar"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "fundamentos",
+          "previousStatus": "abandonado",
+          "currentStatus": "en-progreso",
+          "progress": 10,
+          "certificates": 0,
+          "message": "Transición exitosa: abandonado → en-progreso"
+        }
+      }
+    }
+  ]
+}

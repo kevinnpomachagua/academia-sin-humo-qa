@@ -1,0 +1,76 @@
+{
+  "bug": "BUG-02",
+  "req": "REQ-C06/A03",
+  "producto": "https://playground.calidadsinhumo.com",
+  "pasos": [
+    {
+      "paso": "registrar usuario",
+      "request": {
+        "method": "POST",
+        "url": "/api/register",
+        "body": {
+          "name": "Lucía Mamani Flores",
+          "email": "lucia.mamani.17944567696183@yopmail.com",
+          "password": "<omitida, 21 caracteres>",
+          "age": 31
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "message": "Registro exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567696183@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "iniciar sesión",
+      "request": {
+        "method": "POST",
+        "url": "/api/login",
+        "body": {
+          "email": "lucia.mamani.17944567696183@yopmail.com",
+          "password": "<omitida, 21 caracteres>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Login exitoso",
+          "user": {
+            "name": "Lucía Mamani Flores",
+            "email": "lucia.mamani.17944567696183@yopmail.com",
+            "age": 31
+          }
+        }
+      }
+    },
+    {
+      "paso": "inscribir sin haber completado \"fundamentos\" (esperado: 403)",
+      "request": {
+        "method": "POST",
+        "url": "/api/enroll",
+        "body": {
+          "courseId": "playwright-cero"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "courseId": "playwright-cero",
+          "status": "inscrito",
+          "displayStatus": "inscrito",
+          "progress": 0,
+          "certificates": 0,
+          "enrolledAt": 1794456770020,
+          "message": "Inscripción exitosa a \"Playwright desde cero\"",
+          "spotsLeft": 3
+        }
+      }
+    }
+  ]
+}
