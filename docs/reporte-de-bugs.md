@@ -3,7 +3,7 @@
 Producto: https://playground.calidadsinhumo.com · Especificación: `/documentacion`  
 Fecha de ejecución: 2026-11-12 · Navegador/cliente: Playwright (Chromium) y navegación manual.
 
-Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por API con `tests/api/sondeo.spec.ts` (cada test afirma lo que exige la spec y falla mientras el bug exista; los controles de límite de contraseña, 64 aceptada y 7 rechazada, pasan). BUG-07 a BUG-10 se encontraron por UI y sus capturas, con el defecto resaltado, están en `docs/evidencia/` (se generan con `npx playwright test tests/evidencia`). BUG-11 a BUG-15 salieron al ejecutar los casos de `docs/casos-de-prueba.md` con `tests/evidencia/ejecucion-casos.spec.ts`, que mide y no afirma (termina en verde); sus resultados se leen en la salida `CPxx|estado|resumen` y las capturas, cuando son de UI, están en `docs/evidencia/`.
+Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por API con `tests/api/sondeo.spec.ts` (cada test afirma lo que exige la spec y falla mientras el bug exista; los controles de límite de contraseña, 64 aceptada y 7 rechazada, pasan). BUG-07 a BUG-10 se encontraron por UI y sus capturas, con el defecto resaltado, están en `docs/evidencia/` (se generan con `npx playwright test tests/evidencia`). BUG-11 a BUG-16 salieron al ejecutar los casos de `docs/casos-de-prueba.md` con `tests/evidencia/ejecucion-casos.spec.ts` (BUG-16, con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`), que miden y no afirman (terminan en verde); sus resultados se leen en la salida `CPxx|estado|resumen` y las capturas, cuando son de UI, están en `docs/evidencia/`.
 
 | ID | Título | REQ | Severidad | Capa |
 |---|---|---|---|---|
@@ -22,6 +22,7 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 | BUG-13 | Completado y Certificado pasan a En progreso | P02, P03 | Media | API |
 | BUG-14 | Cerrar sesión no reinicia el progreso | S02 | Media | UI |
 | BUG-15 | El CV acepta cualquier archivo, de cualquier tipo y tamaño | U02, U03 | Media | UI |
+| BUG-16 | La reserva acepta un fin igual o anterior al inicio | D03 | Baja | UI |
 
 ---
 
@@ -252,7 +253,15 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 - **Severidad y por qué:** Media. Las dos reglas de la subida no se aplican, así que la pantalla confirma como correcto un archivo que debía rechazarse.
 - **Capa donde se detecta:** UI
 
----
-
-## Alcance no ejecutado
-- REQ-D01 y REQ-D03: fechas obligatorias y fin igual o anterior al inicio (CP-52 y CP-53). Los dos casos están diseñados pero no se ejecutaron: se priorizó el límite aceptado (CP-81, que solo cubre fin = inicio + 1) y no hubo tiempo para sondear el resto de `/reserva`. No hay evidencia de que cumplan o incumplan la spec.
+### BUG-16 · La reserva acepta un fin igual o anterior al inicio
+- **REQ violado:** REQ-D03 — "La fecha de fin debe ser posterior a la de inicio. Una fecha de fin anterior o igual al inicio debe rechazarse."
+- **Comportamiento esperado:** con fin igual al inicio, o anterior a él, la reserva se rechaza con un mensaje de error.
+- **Comportamiento real:** con inicio = hoy + 5 (2026-11-17), tanto fin = 2026-11-17 (fin = inicio) como fin = 2026-11-16 (inicio − 1 día) muestran "Reserva confirmada". El texto "Elige cuándo empiezas. La fecha de inicio debe ser dentro de los próximos 30 días, y la de fin posterior a la de inicio." es una ayuda estática de la página, no un mensaje de error.
+- **Pasos para reproducir:**
+  1. Abrir `/reserva`.
+  2. Fecha de inicio: hoy + 5 días (ejecución del 2026-11-12: 2026-11-17); fecha de fin: la misma fecha.
+  3. Pulsar "Reservar".
+  4. Repetir con la fecha de fin un día antes del inicio (2026-11-16).
+- **Evidencia:** `docs/evidencia/cp52-fin-igual-inicio.png` (fin = inicio, "Reserva confirmada"); caso CP-52 en `docs/casos-de-prueba.md`, medido el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`. En el mismo spec, CP-53 (inicio o fin vacíos) rechaza correctamente.
+- **Severidad y por qué:** Baja. Acepta un rango de fechas incoherente, pero no afecta a otros flujos (igual que BUG-08).
+- **Capa donde se detecta:** UI

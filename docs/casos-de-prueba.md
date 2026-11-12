@@ -2,7 +2,7 @@
 
 - **Producto:** https://playground.calidadsinhumo.com
 - **Especificación:** https://playground.calidadsinhumo.com/documentacion (REQ-R01 a REQ-U03, leída el 2026-11-11)
-- **Fecha de ejecución:** 2026-11-11 y 2026-11-12 · cliente: Playwright (Chromium). Los casos de reserva (CP-50, CP-51, CP-79 a CP-81 y CP-93) calculan sus fechas con "hoy" = 2026-11-12, es decir, se ejecutaron ese día; el resto de los casos no registra una fecha propia dentro del documento.
+- **Fecha de ejecución:** 2026-11-11 y 2026-11-12 · cliente: Playwright (Chromium). Los casos de reserva (CP-50 a CP-53, CP-79 a CP-81 y CP-93) calculan sus fechas con "hoy" = 2026-11-12, es decir, se ejecutaron ese día (CP-52 y CP-53 se ejecutaron el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`); el resto de los casos no registra una fecha propia dentro del documento.
 - **Diseño:** a partir de la especificación, no de la pantalla. Los resultados se midieron con `tests/evidencia/ejecucion-casos.spec.ts` (API y UI); CP-20, CP-23 y CP-54 a CP-56 provienen de la evidencia de `docs/evidencia/` y de `docs/reporte-de-bugs.md`.
 - **Criterio:** "Resultado obtenido" es lo observado; donde no se ejecutó se dice y no se inventa un resultado.
 - **Nota sobre los endpoints:** de la API solo `/api/enroll` aparece en la spec (REQ-A01 a A03). `/api/register`, `/api/login`, `/api/courses`, `/api/progress` y `/api/auth/me` se observaron con DevTools; no vienen de la spec, y sus nombres, acciones (`comenzar`, `completar`, `certificar`, `abandonar`, `retomar`) y códigos de error son inferidos.
@@ -12,19 +12,19 @@
 
 ## Resumen
 
-Total: **93** casos · PASA **56** · FALLA **35** · NO EJECUTADO **2**
+Total: **93** casos · PASA **57** · FALLA **36** · NO EJECUTADO **0**
 
 | Técnica | Casos | PASA | FALLA | NO EJECUTADO |
 |---|---|---|---|---|
-| valores límite | 25 | 17 | 7 | 1 |
-| partición | 26 | 15 | 10 | 1 |
+| valores límite | 25 | 17 | 8 | 0 |
+| partición | 26 | 16 | 10 | 0 |
 | tabla de decisión | 16 | 8 | 8 | 0 |
 | transición de estados | 15 | 11 | 4 | 0 |
 | temporal | 6 | 2 | 4 | 0 |
 | autorización | 5 | 3 | 2 | 0 |
-| **Total** | **93** | **56** | **35** | **2** |
+| **Total** | **93** | **57** | **36** | **0** |
 
-Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salieron cinco bugs nuevos, ya registrados: BUG-11 (email sin dominio o sin punto), BUG-12 (botón de login habilitado unos 5 s antes del timer), BUG-13 (Completado y Certificado pasan a En progreso), BUG-14 (cerrar sesión no reinicia el progreso) y BUG-15 (el CV acepta cualquier archivo). BUG-08 se reformuló con fechas en UTC: el servidor acepta un inicio a hoy + 31 días y rechaza hoy + 32. CP-30, CP-65, CP-66, CP-82 y CP-84 son nuevas manifestaciones de BUG-02; CP-76 y CP-87 de BUG-10. CP-46 es una observación fuera de la spec. CP-52 y CP-53 son los dos únicos casos no ejecutados: están diseñados contra REQ-D03 y REQ-D01, pero se priorizó el límite aceptado (CP-81) y no hubo tiempo para sondear el rechazo de fechas ni los campos obligatorios de `/reserva`.
+Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salieron seis bugs nuevos, ya registrados: BUG-11 (email sin dominio o sin punto), BUG-12 (botón de login habilitado unos 5 s antes del timer), BUG-13 (Completado y Certificado pasan a En progreso), BUG-14 (cerrar sesión no reinicia el progreso) BUG-15 (el CV acepta cualquier archivo) y BUG-16 (la reserva acepta un fin igual o anterior al inicio). BUG-08 se reformuló con fechas en UTC: el servidor acepta un inicio a hoy + 31 días y rechaza hoy + 32. CP-30, CP-65, CP-66, CP-82 y CP-84 son nuevas manifestaciones de BUG-02; CP-76 y CP-87 de BUG-10. CP-52 es una nueva manifestación de BUG-16. CP-46 es una observación fuera de la spec. Los 93 casos están ejecutados; CP-52 y CP-53, que al principio quedaron pendientes, se ejecutaron el 2026-11-12.
 
 ## Matriz de trazabilidad REQ → CP
 
@@ -57,9 +57,9 @@ Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salier
 | REQ-A01 | CP-35 | Cubierto |  |
 | REQ-A02 | CP-28, CP-29, CP-34 | Parcial | curso inexistente, cupo y prerequisito por API; no se comparó con las reglas de la UI |
 | REQ-A03 | CP-29, CP-33, CP-34, CP-35 | Cubierto |  |
-| REQ-D01 | CP-53 | Diseñado, sin ejecutar |  |
+| REQ-D01 | CP-53 | Cubierto |  |
 | REQ-D02 | CP-50, CP-51, CP-79, CP-80, CP-93 | Cubierto |  |
-| REQ-D03 | CP-52, CP-81 | Parcial | solo el caso aceptado (CP-81); el rechazo (CP-52) no se ejecutó |
+| REQ-D03 | CP-52, CP-81 | Cubierto |  |
 | REQ-N01 | CP-54 | Cubierto |  |
 | REQ-N02 | CP-55 | Cubierto |  |
 | REQ-N03 | CP-56 | Cubierto |  |
@@ -67,7 +67,7 @@ Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salier
 | REQ-U02 | CP-57, CP-58, CP-88, CP-91, CP-92 | Cubierto |  |
 | REQ-U03 | CP-59, CP-89, CP-90 | Cubierto |  |
 
-REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a través de las transiciones entre sus cinco estados). REQ con casos diseñados pero sin ejecutar: REQ-D01.
+REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a través de las transiciones entre sus cinco estados). Todos los REQ con casos tienen sus casos ejecutados.
 
 ---
 
@@ -701,8 +701,8 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Completar con fin = inicio y pulsar "Reservar".
   2. Repetir con fin = inicio − 1 día.
 - **Resultado esperado (según la spec):** Rechazo en ambos casos.
-- **Resultado obtenido:** No se ejecutó.
-- **Estado:** NO EJECUTADO (se priorizó el límite aceptado, CP-81; queda pendiente en `docs/reporte-de-bugs.md`)
+- **Resultado obtenido:** inicio=2026-11-17 (hoy + 5): con fin=2026-11-17 (fin = inicio) aparece "Reserva confirmada"; con fin=2026-11-16 (inicio − 1 día) también aparece "Reserva confirmada". El texto "Elige cuándo empiezas. La fecha de inicio debe ser dentro de los próximos 30 días, y la de fin posterior a la de inicio." es una ayuda estática de la página, no un mensaje de error. Ejecutado el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`. Evidencia: [cp52-fin-igual-inicio.png](evidencia/cp52-fin-igual-inicio.png).
+- **Estado:** FALLA → BUG-16
 
 ### CP-53 · Fechas de inicio y fin obligatorias
 - **Técnica:** partición
@@ -713,8 +713,8 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Dejar vacío el inicio y reservar.
   2. Repetir con el fin vacío.
 - **Resultado esperado (según la spec):** Rechazo indicando el campo obligatorio.
-- **Resultado obtenido:** No se ejecutó.
-- **Estado:** NO EJECUTADO (no se sondeó en el tiempo disponible; queda pendiente en `docs/reporte-de-bugs.md`)
+- **Resultado obtenido:** con el inicio vacío (fin=2026-11-20) y con el fin vacío (inicio=2026-11-17) no aparece "Reserva confirmada": el rechazo es correcto en ambos. Ejecutado el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`.
+- **Estado:** PASA
 
 ### CP-54 · Cada página muestra 10 registros
 - **Técnica:** valores límite
@@ -1212,7 +1212,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 
 Evaluó un agente de Claude con la rúbrica de la sesión 12 (cobertura, claridad, casos límite y Gherkin adaptado a aptitud de traducción); no fue la skill propia del curso, así que es una autoevaluación asistida. La consigna pide además trazabilidad al REQ; esa dimensión no forma parte de la rúbrica de la sesión 12 y el juez no la puntuó, por lo que su valoración va aparte y es mía.
 
-**Trazabilidad (valoración propia, fuera del puntaje):** los 93 casos tienen su campo "REQ que valida", la matriz REQ → CP recoge la cobertura de cada requisito (con las parciales declaradas) y cada uno de los 35 casos en FALLA enlaza el BUG que lo explica en `docs/reporte-de-bugs.md`.
+**Trazabilidad (valoración propia, fuera del puntaje):** los 93 casos tienen su campo "REQ que valida", la matriz REQ → CP recoge la cobertura de cada requisito (con las parciales declaradas) y cada uno de los 36 casos en FALLA enlaza el BUG que lo explica en `docs/reporte-de-bugs.md`.
 
 ### Puntaje
 
@@ -1265,12 +1265,13 @@ Las capturas se nombraron con una numeración anterior a la actual. Esta tabla l
 | Captura (`docs/evidencia/`) | Caso actual | Observación |
 |---|---|---|
 | `cp01-registro-antes.png`, `cp01-registro-despues.png` | CP-20 | Confirmado: el caso las cita como evidencia (BUG-09). |
-| `cp02-bloqueo.png` | CP-23 | Confirmado: el caso la cita (BUG-10). CP-76 y CP-87 muestran el mismo comportamiento, pero no la citan; sin confirmar que la captura corresponda a ellos. CP-77 y CP-78 no usan esta captura. |
+| `cp02-bloqueo.png` | CP-23 | Confirmado: el caso la cita (BUG-10). CP-76 y CP-87 muestran lo mismo pero no la citan. CP-77 y CP-78 no usan esta captura. |
 | `cp04-pagina1.png` | CP-54 y CP-55 | Confirmado: ambos casos la citan (BUG-07). |
 | `cp04-pagina2.png` | CP-56 | Confirmado: el caso la cita (BUG-07). |
 | `cp05-31-dias.png` | CP-51 | Confirmado: el caso la cita (BUG-08). |
-| `cp06-30-dias.png` | CP-50 (control) | La cita CP-51 como control de +30 días; CP-50 no la cita, pero es el caso de +30 días. |
-| `cp25-login-exitoso.png` | CP-25 | La genera `tests/evidencia/ver-login.spec.ts` (REQ-L04); el caso no la cita. |
+| `cp06-30-dias.png` | CP-51 (control de +30 días) | Confirmado: CP-51 la cita como control de +30 días. CP-50 no la cita. |
+| `cp25-login-exitoso.png` | sin caso que la cite | La genera `tests/evidencia/ver-login.spec.ts` como evidencia de REQ-L04. |
+| `cp52-fin-igual-inicio.png` | CP-52 | Confirmado: el caso la cita (BUG-16). |
 | `cp58-cv-txt.png` | CP-58 | Confirmado: el caso la cita (BUG-15). |
 | `cp88-cv-falso.png` | CP-88 | Confirmado: el caso la cita (BUG-15). |
 | `cp89-cv-2mb-mas-1.png` | CP-89 | Confirmado: el caso la cita (BUG-15). |
