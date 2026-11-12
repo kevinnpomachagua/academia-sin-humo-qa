@@ -7,11 +7,11 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0, // sin reintentos: un test inestable debe verse, no esconderse con un segundo intento
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'https://playground.calidadsinhumo.com',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   projects: [
