@@ -19,7 +19,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: headed
-        ? { ...devices['Desktop Chrome'], viewport: null, launchOptions: { args: ['--start-maximized'] } }
+        ? { ...devices['Desktop Chrome'], viewport: null, launchOptions: { args: ['--start-maximized'], slowMo: Number(process.env.SLOWMO ?? 0) } }
         : { ...devices['Desktop Chrome'] },
     },
   ],

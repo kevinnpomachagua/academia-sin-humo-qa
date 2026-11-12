@@ -6,3 +6,10 @@ playwright/.cache/
 .env
 .auth/
 *.log
+.env.*
+!.env.example
+*.bak
+*.pre-*
+*.tmp
+.DS_Store
+Thumbs.db
