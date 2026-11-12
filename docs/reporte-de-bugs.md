@@ -50,7 +50,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 - **Pasos para reproducir:**
   1. Registrar y loguear un usuario nuevo (sin cursos completados).
   2. `POST /api/enroll` con `{ "courseId": "playwright-cero" }`.
-- **Evidencia:** test `REQ-C06/A03 un curso con prerrequisito pendiente se rechaza con 403` (`tests/api/enroll.spec.ts`, con `test.fail`); falla con `Expected: 403, Received: 200`.
+- **Evidencia:** test `REQ-C06/A03 un curso con prerrequisito pendiente se rechaza con 403` (`tests/api/enroll.spec.ts`, con `test.fail`); falla con `Expected: 403, Received: 200`. Se repite en el flujo integrado `tests/integrado/inscripcion-prerrequisito.spec.ts`: la API responde 200 y, aun así, la UI sigue mostrando el curso bloqueado ("Completa primero…") y "Mi progreso" sin cursos, es decir, la API y la interfaz no coinciden sobre el estado del estudiante.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-02-enroll-prerrequisito.json`](evidencia/api/bug-02-enroll-prerrequisito.json)):
   ```text
   POST /api/enroll {"courseId": "playwright-cero"}
