@@ -26,7 +26,7 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 ---
 
 ### BUG-01 · La sesión no se reconoce tras el login
-- **REQ violado:** REQ-S01 — "Las páginas /cursos y /mi-progreso requieren autenticación." y REQ-S02 (la sesión del estudiante debe mantenerse hasta cerrar sesión).
+- **REQ violado:** REQ-S01 — "Las páginas /cursos y /mi-progreso requieren autenticación." y REQ-S02 — "Al cerrar sesión, todo el progreso del estudiante se reinicia. Al volver a iniciar sesión, el estudiante empieza sin cursos inscritos." La comprobación de `/api/auth/me` no figura en la spec: proviene de la pista de la consigna. La violación literal de REQ-S02 es BUG-14.
 - **Comportamiento esperado:** tras un login exitoso, `GET /api/auth/me` devuelve el usuario autenticado.
 - **Comportamiento real:** `GET /api/auth/me` responde 200 pero con `realUser: null`; el servidor no reconoce la sesión.
 - **Pasos para reproducir:**
@@ -254,5 +254,5 @@ Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 
 ---
 
-## Pendientes de reproducir (borrar al cerrarlos)
-- REQ-D01 y REQ-D03: fechas obligatorias y fin igual o anterior al inicio (CP-52 y CP-53, sin ejecutar). CP-81 solo cubre fin = inicio + 1.
+## Alcance no ejecutado
+- REQ-D01 y REQ-D03: fechas obligatorias y fin igual o anterior al inicio (CP-52 y CP-53). Los dos casos están diseñados pero no se ejecutaron: se priorizó el límite aceptado (CP-81, que solo cubre fin = inicio + 1) y no hubo tiempo para sondear el resto de `/reserva`. No hay evidencia de que cumplan o incumplan la spec.
