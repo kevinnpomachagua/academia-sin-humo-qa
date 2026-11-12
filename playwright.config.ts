@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// En ejecucion con --headed la ventana se abre maximizada (en headless se mantiene el viewport por defecto)
+const headed = process.argv.includes('--headed');
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -13,6 +16,11 @@ export default defineConfig({
   },
   projects: [
     // Solo los navegadores que se instalan en CI (ver .github/workflows)
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: headed
+        ? { ...devices['Desktop Chrome'], viewport: null, launchOptions: { args: ['--start-maximized'] } }
+        : { ...devices['Desktop Chrome'] },
+    },
   ],
 });
