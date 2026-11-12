@@ -38,6 +38,11 @@ export class CatalogoPage {
     return this.page.getByTestId(`enroll-result-${courseId}`);
   }
 
+  // Aviso de curso bloqueado ("Completa primero ..."): la UI no ofrece inscribirse si el prerrequisito esta pendiente
+  avisoBloqueo(courseId: string): Locator {
+    return this.tarjeta(courseId).getByText(/Completa primero/);
+  }
+
   cupos(courseId: string): Locator {
     return this.page.getByTestId(`spots-${courseId}`);
   }
