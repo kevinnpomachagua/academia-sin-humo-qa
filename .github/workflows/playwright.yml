@@ -39,7 +39,7 @@ jobs:
       # Alcance del CI: tests/api, tests/e2e y tests/integrado (la suite de regresión).
       # Fuera del CI, a propósito: tests/evidencia/. Son scripts que MIDEN el producto y generan capturas y
       # evidencia para docs/ (no afirman nada y algunos usan esperas visuales); se lanzan a demanda en local.
-      # Los bugs conocidos (BUG-01 a BUG-10) están declarados con test.fail(true, 'BUG-XX…'): la suite pasa
+      # Los bugs conocidos (BUG-01 a BUG-06, BUG-09 y BUG-10) están declarados con test.fail(true, 'BUG-XX…'): la suite pasa
       # mientras el producto siga incumpliendo la spec y se pone roja cuando alguno se corrija.
       - name: Tests (API, E2E e integrado)
         run: npm run test:ci
