@@ -7,11 +7,11 @@ import { test, expect, Page, Locator } from '@playwright/test';
 const OUT = 'docs/evidencia';
 const sufijo = () => `${Date.now()}`;
 
+// El servidor calcula "hoy" en UTC: las fechas de reserva se calculan en UTC
 function fecha(diasDesdeHoy: number): string {
   const d = new Date();
-  d.setDate(d.getDate() + diasDesdeHoy);
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  d.setUTCDate(d.getUTCDate() + diasDesdeHoy);
+  return d.toISOString().slice(0, 10);
 }
 
 // Dibuja un recuadro rojo y una etiqueta al costado del elemento donde ocurre el defecto

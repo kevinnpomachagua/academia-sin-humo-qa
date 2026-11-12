@@ -3,7 +3,7 @@
 Producto: https://playground.calidadsinhumo.com · Especificación: `/documentacion`  
 Fecha de ejecución: 2026-11-12 · Navegador/cliente: Playwright (Chromium) y navegación manual.
 
-Resumen: 10 discrepancias contra la spec. 6 se reprodujeron por API con `tests/api/sondeo.spec.ts` (cada test afirma lo que exige la spec y falla mientras el bug exista; los controles de límite de contraseña, 64 aceptada y 7 rechazada, pasan). 4 se encontraron por UI; sus capturas, con el defecto resaltado, están en `docs/evidencia/` y se generan con `npx playwright test tests/evidencia`.
+Resumen: 15 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por API con `tests/api/sondeo.spec.ts` (cada test afirma lo que exige la spec y falla mientras el bug exista; los controles de límite de contraseña, 64 aceptada y 7 rechazada, pasan). BUG-07 a BUG-10 se encontraron por UI y sus capturas, con el defecto resaltado, están en `docs/evidencia/` (se generan con `npx playwright test tests/evidencia`). BUG-11 a BUG-15 salieron al ejecutar los casos de `docs/casos-de-prueba.md` con `tests/evidencia/ejecucion-casos.spec.ts`, que mide y no afirma (termina en verde); sus resultados se leen en la salida `CPxx|estado|resumen` y las capturas, cuando son de UI, están en `docs/evidencia/`.
 
 | ID | Título | REQ | Severidad | Capa |
 |---|---|---|---|---|
@@ -17,6 +17,11 @@ Resumen: 10 discrepancias contra la spec. 6 se reprodujeron por API con `tests/a
 | BUG-08 | La reserva acepta un inicio a 31 días | D02 | Baja | UI |
 | BUG-09 | El registro exitoso no limpia el formulario | R06 | Baja | UI |
 | BUG-10 | El login se bloquea tras 4 intentos fallidos, no 5 | L03 | Media | UI |
+| BUG-11 | El email sin dominio o sin punto se acepta | R03 | Baja | API |
+| BUG-12 | El botón de login se habilita unos 5 s antes de que el timer llegue a 0 | L03 | Baja | UI |
+| BUG-13 | Completado y Certificado pasan a En progreso | P02, P03 | Media | API |
+| BUG-14 | Cerrar sesión no reinicia el progreso | S02 | Media | UI |
+| BUG-15 | El CV acepta cualquier archivo, de cualquier tipo y tamaño | U02, U03 | Media | UI |
 
 ---
 
@@ -104,14 +109,14 @@ Resumen: 10 discrepancias contra la spec. 6 se reprodujeron por API con `tests/a
 
 ### BUG-08 · La reserva acepta un inicio a 31 días
 - **REQ violado:** REQ-D02 — "La fecha de inicio debe estar entre hoy y 30 días en el futuro (inclusive). Una fecha a 31 días debe ser rechazada."
-- **Comportamiento esperado:** una fecha de inicio a 31 días se rechaza con un mensaje de error.
-- **Comportamiento real:** se muestra "Reserva confirmada".
+- **Comportamiento esperado:** hoy + 30 se acepta y hoy + 31 se rechaza con un mensaje de error.
+- **Comportamiento real:** el límite superior está desplazado un día. Con "hoy" calculado en UTC, que es como lo calcula el servidor: +30 se acepta, **+31 se acepta** ("Reserva confirmada") y +32 se rechaza ("La fecha de inicio no puede superar los 30 días").
 - **Pasos para reproducir:**
   1. Abrir `/reserva`.
-  2. Fecha de inicio: hoy + 31 días (ejecución del 2026-11-11: 2026-12-12); fecha de fin: tres días después.
+  2. Fecha de inicio: hoy (UTC) + 31 días (ejecución del 2026-11-12 UTC: 2026-12-13); fecha de fin: tres días después.
   3. Pulsar "Reservar".
-- **Evidencia:** `docs/evidencia/cp05-31-dias.png` (inicio 2026-12-12 = hoy + 31 días, mensaje "Reserva confirmada" resaltado). Control: `docs/evidencia/cp06-30-dias.png` (hoy + 30 días se acepta, como exige la spec).
-- **Severidad y por qué:** Baja. Acepta una fecha fuera del rango permitido, pero no afecta a otros flujos.
+- **Evidencia:** `docs/evidencia/cp05-31-dias.png` (inicio 2026-12-13 = hoy UTC + 31, "Reserva confirmada" resaltado). Controles: `docs/evidencia/cp06-30-dias.png` (+30 aceptado) y caso CP-93 (+32 rechazado); casos CP-50, CP-51 y CP-93 en `docs/casos-de-prueba.md`. Nota: una primera lectura con fechas en hora local de Lima daba un día de diferencia; por eso las fechas se calculan en UTC.
+- **Severidad y por qué:** Baja. Acepta una fecha un día fuera del rango permitido, pero no afecta a otros flujos.
 - **Capa donde se detecta:** UI
 
 ### BUG-09 · El registro exitoso no limpia el formulario
@@ -137,9 +142,67 @@ Resumen: 10 discrepancias contra la spec. 6 se reprodujeron por API con `tests/a
 - **Evidencia:** `docs/evidencia/cp02-bloqueo.png` (botón "Bloqueado tras 4 intentos (spec: 5)"). Reproducido en 3 ejecuciones con correos distintos (`BLOQUEADO_TRAS=4`, espaciadas más de 30 s) con `tests/evidencia/capturas.spec.ts`, y por el test `BUG? REQ-L03 el 5.o intento fallido debe bloquear la cuenta`.
 - **Severidad y por qué:** Media. El bloqueo ocurre antes de lo especificado, y el umbral de seguridad documentado no se cumple.
 - **Capa donde se detecta:** UI
-- **No verificado:** que el botón se rehabilite exactamente cuando el temporizador llega a 0 (tercera viñeta de REQ-L03).
+- **Evidencia adicional (API):** casos CP-76 (cuenta registrada) y CP-87 (cuenta de prueba del sitio): con 4 intentos fallidos la 4.ª respuesta de `POST /api/login` ya es 429; el login correcto siguiente también devuelve 429. Secuencia observada: `401, 401, 401, 429, 429, 429`; la spec exige que 4 fallos + 1 acierto + 1 fallo no bloqueen.
+- **Seguimiento:** la rehabilitación del botón se midió después y es el BUG-12.
+
+### BUG-11 · El email sin dominio o sin punto se acepta
+- **REQ violado:** REQ-R03 — "Emails como usuario@ o usuario no son válidos." y "debe contener un @ seguido de un dominio con punto".
+- **Comportamiento esperado:** `usuario@` y un dominio sin punto se rechazan, igual que `usuario`.
+- **Comportamiento real:** `POST /api/register` responde 201 con `usuario@` y con `lucia.mamani@yopmail`. El control `usuario` sí se rechaza con 422 ("El email no tiene un formato válido"), y `@dominio.com` también.
+- **Pasos para reproducir:**
+  1. `POST /api/register` con nombre `Marcela Quispe Huamán`, contraseña `Lima#2026qa`, edad 29 y el email `usuario@`.
+  2. Repetir con `lucia.mamani@yopmail`.
+- **Evidencia:** casos CP-13 (`usuario@` → 201) y CP-15 (`lucia.mamani@yopmail` → 201) en `docs/casos-de-prueba.md`, medidos con `tests/evidencia/ejecucion-casos.spec.ts`. También se aceptan `a@.com` (CP-69), `a@b.` (CP-70), `a@@b.com` (CP-71) y un email con espacio (CP-72); la spec no los nombra, pero contradicen "un @ seguido de un dominio con punto".
+- **Severidad y por qué:** Baja. Entran cuentas con emails inválidos, pero no se compromete ningún flujo; sí afecta a cualquier envío posterior al email.
+- **Capa donde se detecta:** API
+
+### BUG-12 · El botón de login se habilita unos 5 s antes de que el timer llegue a 0
+- **REQ violado:** REQ-L03 — "El botón se habilita exactamente cuando el timer llega a 0".
+- **Comportamiento esperado:** el botón sigue deshabilitado mientras el timer muestra segundos restantes y se habilita al llegar a 0 (30 s de bloqueo).
+- **Comportamiento real:** el timer arranca en 30 y baja con normalidad (26 lecturas distintas, siempre decreciente), pero el botón se habilita con el timer todavía en 5: bloqueo observado de unos 25 s.
+- **Pasos para reproducir:**
+  1. Abrir `/login` y provocar el bloqueo (4 intentos fallidos con un email inexistente, ver BUG-10).
+  2. Observar el botón y el recuadro "Puedes intentar de nuevo en N segundos" cada 100 ms.
+- **Evidencia:** caso CP-78 (muestras `[ms, botón deshabilitado, timer]`: `[24915,true,6],[25005,true,6],[25101,false,5]`) con `tests/evidencia/ejecucion-casos.spec.ts`; CP-24 y CP-77 pasan (botón deshabilitado y timer visible y decreciente). Una exploración previa con otro email también lo habilitó a los ~26 s.
+- **Severidad y por qué:** Baja. El bloqueo dura menos de lo documentado, pero la protección sigue existiendo.
+- **Capa donde se detecta:** UI
+
+### BUG-13 · Completado y Certificado pasan a En progreso
+- **REQ violado:** REQ-P02 (Completado solo admite Certificado; Certificado es estado final) y REQ-P03 — "Cualquier transición no listada arriba debe ser rechazada con un mensaje de error."
+- **Comportamiento esperado:** `comenzar` sobre un curso Completado o Certificado se rechaza.
+- **Comportamiento real:** responde 200 y el estado pasa a `en-progreso` en ambos casos.
+- **Pasos para reproducir:**
+  1. Registrar y loguear un usuario nuevo; inscribir `fundamentos`.
+  2. `POST /api/progress` con `comenzar` y `completar` (y, para el segundo caso, `certificar`).
+  3. `POST /api/progress` con `{ courseId: "fundamentos", action: "comenzar" }`.
+- **Evidencia:** casos CP-62 (Completado → En progreso: 200, `en-progreso`) y CP-63 (Certificado → En progreso: 200, `en-progreso`). Mismo patrón que BUG-05. Los demás rechazos (CP-41, 43, 44, 60, 61, 64) sí devuelven error.
+- **Severidad y por qué:** Media. Un certificado emitido puede volver a En progreso y generar otro después.
+- **Capa donde se detecta:** API
+
+### BUG-14 · Cerrar sesión no reinicia el progreso
+- **REQ violado:** REQ-S02 — "Al cerrar sesión, todo el progreso del estudiante se reinicia. Al volver a iniciar sesión, el estudiante empieza sin cursos inscritos."
+- **Comportamiento esperado:** tras cerrar sesión y volver a entrar, `/mi-progreso` muestra "Aún no tienes cursos".
+- **Comportamiento real:** el curso inscrito antes de cerrar sesión sigue listado.
+- **Pasos para reproducir:**
+  1. Iniciar sesión con la cuenta de prueba del sitio, inscribir `fundamentos` en `/cursos` y comprobar que aparece en `/mi-progreso`.
+  2. Pulsar "Cerrar sesión".
+  3. Entrar de nuevo (navegación interna, sin recargar) y abrir `/mi-progreso`.
+- **Evidencia:** caso CP-49 (antes: listado; después: no vacío). La cuenta de prueba es compartida y su estado puede estar modificado por otras personas; el caso inscribe un curso y comprueba lo que queda listado. Recargar la página sí borra el estado, por lo que se usó navegación interna.
+- **Severidad y por qué:** Media. Incumple una regla explícita de sesión y deja datos de un estudiante visibles para el siguiente.
+- **Capa donde se detecta:** UI
+
+### BUG-15 · El CV acepta cualquier archivo, de cualquier tipo y tamaño
+- **REQ violado:** REQ-U02 — "Solo se aceptan archivos PDF." y REQ-U03 — "El tamaño máximo es 2 MB (inclusive). Un archivo de 2.5 MB debe rechazarse."
+- **Comportamiento esperado:** un `.png`, un `.txt`, un `.pdf` cuyo contenido no es PDF y un archivo vacío se rechazan; también uno de 2 097 153 bytes y uno de 2,5 MB.
+- **Comportamiento real:** en todos los casos aparece "CV subido correctamente". Solo se comprobó el resultado visible; la spec no define el MB y aquí se interpreta como 2 097 152 bytes (ese tamaño exacto se acepta, como corresponde).
+- **Pasos para reproducir:**
+  1. Abrir `/perfil` y elegir un archivo `notas.txt` en el campo del CV (el input no tiene atributo `accept`).
+  2. Pulsar "Subir CV".
+- **Evidencia:** `docs/evidencia/cp58-cv-txt.png`, `cp88-cv-falso.png`, `cp89-cv-2mb-mas-1.png`, `cp90-cv-2-5mb.png`; casos CP-58 (`.png` y `.txt`), CP-88 (`.pdf` con texto plano), CP-89 (2 097 153 bytes), CP-90 (2,5 MB) y CP-91 (0 bytes; la spec no lo nombra, se registra como observación).
+- **Severidad y por qué:** Media. Las dos reglas de la subida no se aplican, así que la pantalla confirma como correcto un archivo que debía rechazarse.
+- **Capa donde se detecta:** UI
 
 ---
 
 ## Pendientes de reproducir (borrar al cerrarlos)
-- REQ-L03: comprobar que el botón se habilita exactamente cuando el timer llega a 0.
+- REQ-D01 y REQ-D03: fechas obligatorias y fin igual o anterior al inicio (CP-52 y CP-53, sin ejecutar). CP-81 solo cubre fin = inicio + 1.
