@@ -7,7 +7,8 @@ import { test, expect } from '@playwright/test';
 const sufijo = () => `${Date.now()}`;
 
 test.describe('Sondeo UI contra la spec', () => {
-  test('BUG? REQ-R06 el formulario de registro debe limpiarse tras un alta exitosa', async ({ page }) => {
+  test('BUG-09 REQ-R06 el formulario de registro debe limpiarse tras un alta exitosa', async ({ page }) => {
+    test.fail(true, 'BUG-09: el formulario de registro conserva los datos tras un alta exitosa (REQ-R06)');
     // Arrange
     await page.goto('/registro');
     await page.getByTestId('register-name').fill('Sondeo QA');
@@ -26,7 +27,8 @@ test.describe('Sondeo UI contra la spec', () => {
     }
   });
 
-  test('BUG? REQ-L03 el 5.o intento fallido debe bloquear la cuenta', async ({ page }) => {
+  test('BUG-10 REQ-L03 el 5.o intento fallido debe bloquear la cuenta', async ({ page }) => {
+    test.fail(true, 'BUG-10: el bloqueo por intentos fallidos ocurre tras el 4.o intento, no el 5.o (REQ-L03)');
     test.setTimeout(60_000);
     // Arrange: cuenta inexistente, contrasena incorrecta (no se usa ninguna credencial real)
     await page.goto('/login');

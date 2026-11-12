@@ -3,7 +3,7 @@
 Producto: https://playground.calidadsinhumo.com · Especificación: `/documentacion`  
 Fecha de ejecución: 2026-11-12 · Navegador/cliente: Playwright (Chromium) y navegación manual.
 
-Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por API con `tests/api/sondeo.spec.ts` (cada test afirma lo que exige la spec y falla mientras el bug exista; los controles de límite de contraseña, 64 aceptada y 7 rechazada, pasan). BUG-07 a BUG-10 se encontraron por UI y sus capturas, con el defecto resaltado, están en `docs/evidencia/` (se generan con `npx playwright test tests/evidencia`). BUG-11 a BUG-16 salieron al ejecutar los casos de `docs/casos-de-prueba.md` con `tests/evidencia/ejecucion-casos.spec.ts` (BUG-16, con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`), que miden y no afirman (terminan en verde); sus resultados se leen en la salida `CPxx|estado|resumen` y las capturas, cuando son de UI, están en `docs/evidencia/`.
+Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por API con `tests/api/enroll.spec.ts` (BUG-02 y BUG-03) y `tests/api/sondeo.spec.ts` (BUG-01, BUG-04, BUG-05 y BUG-06): cada test afirma lo que exige la spec y se declara con `test.fail(true, 'BUG-XX…')`, así que la suite pasa mientras el bug exista y se pone roja cuando se corrija; los controles de límite de contraseña, 64 aceptada y 7 rechazada, pasan). BUG-07 a BUG-10 se encontraron por UI y sus capturas, con el defecto resaltado, están en `docs/evidencia/` (se generan con `npx playwright test tests/evidencia`). BUG-11 a BUG-16 salieron al ejecutar los casos de `docs/casos-de-prueba.md` con `tests/evidencia/ejecucion-casos.spec.ts` (BUG-16, con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`), que miden y no afirman (terminan en verde); sus resultados se leen en la salida `CPxx|estado|resumen` y las capturas, cuando son de UI, están en `docs/evidencia/`.
 
 | ID | Título | REQ | Severidad | Capa |
 |---|---|---|---|---|
@@ -34,7 +34,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   1. `POST /api/register` con un usuario nuevo (201).
   2. `POST /api/login` con ese usuario (200).
   3. `GET /api/auth/me` en el mismo contexto.
-- **Evidencia:** test `BUG? REQ-S01/S02 /api/auth/me debe devolver el usuario tras el login`; falla en `expect(body.realUser).not.toBeNull()` con `Received: null`. Request y response adjuntos en el reporte de Playwright.
+- **Evidencia:** test `BUG-01 REQ-S01/S02 /api/auth/me debe devolver el usuario tras el login` (`tests/api/sondeo.spec.ts`, con `test.fail`); falla en `expect(body.realUser).not.toBeNull()` con `Received: null`. Request y response adjuntos en el reporte de Playwright.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-01-auth-me.json`](evidencia/api/bug-01-auth-me.json)):
   ```text
   GET /api/auth/me
@@ -50,7 +50,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 - **Pasos para reproducir:**
   1. Registrar y loguear un usuario nuevo (sin cursos completados).
   2. `POST /api/enroll` con `{ "courseId": "playwright-cero" }`.
-- **Evidencia:** test `BUG? REQ-C06/A03 enroll con prerrequisito pendiente debe responder 403`; falla con `Expected: 403, Received: 200`.
+- **Evidencia:** test `REQ-C06/A03 un curso con prerrequisito pendiente se rechaza con 403` (`tests/api/enroll.spec.ts`, con `test.fail`); falla con `Expected: 403, Received: 200`.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-02-enroll-prerrequisito.json`](evidencia/api/bug-02-enroll-prerrequisito.json)):
   ```text
   POST /api/enroll {"courseId": "playwright-cero"}
@@ -68,7 +68,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   2. `GET /api/courses` y calcular libres = `maxStudents - enrolled` de `programacion-qa`.
   3. `POST /api/enroll` con `programacion-qa` (200).
   4. `GET /api/courses` de nuevo.
-- **Evidencia:** test `BUG? REQ-C04 el cupo debe bajar en 1 tras inscribirse`; falla con `Expected: 19, Received: 20`. Adjunto `catalogo-antes-despues`.
+- **Evidencia:** test `REQ-C04 el cupo del catalogo baja en 1 tras inscribirse (GET /api/courses antes y despues)` (`tests/api/enroll.spec.ts`, con `test.fail`); falla con `Expected: 19, Received: 20`. Adjunto `catalogo-antes-despues`.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-03-cupo.json`](evidencia/api/bug-03-cupo.json)):
   ```text
   GET /api/courses (antes)  → programacion-qa: maxStudents=20, enrolled=0, libres=20
@@ -84,7 +84,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 - **Comportamiento esperado:** el registro con 65 caracteres se rechaza (4xx).
 - **Comportamiento real:** responde 201 y crea la cuenta.
 - **Pasos para reproducir:** `POST /api/register` con una contraseña de 65 caracteres (nombre, email y edad válidos).
-- **Evidencia:** test `BUG? REQ-R04 contrasena de 65 caracteres debe rechazarse`; falla con `Expected: >= 400, Received: 201`. Los controles de 64 (aceptada) y 7 (rechazada) pasan, así que el defecto es solo el límite superior.
+- **Evidencia:** test `BUG-04 REQ-R04 contrasena de 65 caracteres debe rechazarse` (`tests/api/sondeo.spec.ts`, con `test.fail`); falla con `Expected: >= 400, Received: 201`. Los controles de 64 (aceptada) y 7 (rechazada) pasan, así que el defecto es solo el límite superior.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-04-password-65.json`](evidencia/api/bug-04-password-65.json)):
   ```text
   POST /api/register (contraseña de 65 caracteres)
@@ -102,7 +102,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   2. `POST /api/enroll` con `fundamentos` (200).
   3. `POST /api/progress` con `{ courseId: "fundamentos", action: "abandonar" }` (200).
   4. `POST /api/progress` con `{ courseId: "fundamentos", action: "retomar" }`.
-- **Evidencia:** test `BUG? REQ-P02/P03 un curso Abandonado no debe pasar a En progreso`; falla con `Expected: >= 400, Received: 200`.
+- **Evidencia:** test `BUG-05 REQ-P02/P03 un curso Abandonado no debe pasar a En progreso` (`tests/api/sondeo.spec.ts`, con `test.fail`); falla con `Expected: >= 400, Received: 200`.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-05-abandonado-retomar.json`](evidencia/api/bug-05-abandonado-retomar.json)):
   ```text
   POST /api/progress {"courseId": "fundamentos", "action": "retomar"}
@@ -119,7 +119,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   1. Registrar y loguear un usuario nuevo; inscribir `fundamentos`.
   2. `POST /api/progress` con las acciones `comenzar`, `completar` y `certificar` (todas 200; tras la primera certificación `certificates` es 1).
   3. Repetir `certificar`.
-- **Evidencia:** test `BUG? REQ-P04 certificar dos veces no debe duplicar certificados`; falla con `Expected: 1, Received: 2`.
+- **Evidencia:** test `BUG-06 REQ-P04 certificar dos veces no debe duplicar certificados` (`tests/api/sondeo.spec.ts`, con `test.fail`); falla con `Expected: 1, Received: 2`.
 - **Respuesta real** (completa en [`docs/evidencia/api/bug-06-certificado-duplicado.json`](evidencia/api/bug-06-certificado-duplicado.json)):
   ```text
   POST /api/progress {"courseId": "fundamentos", "action": "certificar"}
@@ -162,7 +162,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   1. Abrir `/registro`.
   2. Rellenar: Marcela Quispe Huamán, un email `@yopmail.com` nuevo, contraseña de 11 caracteres y edad 29.
   3. Pulsar "Crear cuenta".
-- **Evidencia:** `docs/evidencia/cp01-registro-antes.png` y `docs/evidencia/cp01-registro-despues.png` (los cuatro campos resaltados); test `BUG? REQ-R06 el formulario de registro debe limpiarse tras un alta exitosa` en `tests/e2e/ui-sondeo.spec.ts`, que falla con `Expected: ""`.
+- **Evidencia:** `docs/evidencia/cp01-registro-antes.png` y `docs/evidencia/cp01-registro-despues.png` (los cuatro campos resaltados); test `BUG-09 REQ-R06 el formulario de registro debe limpiarse tras un alta exitosa` en `tests/e2e/ui-sondeo.spec.ts`, que falla con `Expected: ""`.
 - **Severidad y por qué:** Baja. No afecta a los datos, pero deja la contraseña en pantalla y puede provocar un segundo registro por error.
 - **Capa donde se detecta:** UI
 
@@ -174,7 +174,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
   1. Abrir `/login` sin bloqueo activo.
   2. Intentar entrar 4 veces con un email no registrado y contraseñas incorrectas distintas.
   3. Observar el botón tras cada intento.
-- **Evidencia:** `docs/evidencia/cp02-bloqueo.png` (botón "Bloqueado tras 4 intentos (spec: 5)"). Reproducido en 3 ejecuciones con correos distintos (`BLOQUEADO_TRAS=4`, espaciadas más de 30 s) con `tests/evidencia/capturas.spec.ts`, y por el test `BUG? REQ-L03 el 5.o intento fallido debe bloquear la cuenta`.
+- **Evidencia:** `docs/evidencia/cp02-bloqueo.png` (botón "Bloqueado tras 4 intentos (spec: 5)"). Reproducido en 3 ejecuciones con correos distintos (`BLOQUEADO_TRAS=4`, espaciadas más de 30 s) con `tests/evidencia/capturas.spec.ts`, y por el test `BUG-10 REQ-L03 el 5.o intento fallido debe bloquear la cuenta`.
 - **Severidad y por qué:** Media. El bloqueo ocurre antes de lo especificado, y el umbral de seguridad documentado no se cumple.
 - **Capa donde se detecta:** UI
 - **Evidencia adicional (API):** casos CP-76 (cuenta registrada) y CP-87 (cuenta de prueba del sitio): con 4 intentos fallidos la 4.ª respuesta de `POST /api/login` ya es 429; el login correcto siguiente también devuelve 429. Secuencia observada: `401, 401, 401, 429, 429, 429`; la spec exige que 4 fallos + 1 acierto + 1 fallo no bloqueen.

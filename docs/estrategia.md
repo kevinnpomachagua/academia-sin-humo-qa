@@ -18,7 +18,7 @@
 5. Por UI se confirmaron además: formulario de registro sin limpiar (BUG-09), bloqueo de login tras 4 intentos y no 5 (BUG-10), paginación con 4 estudiantes inalcanzables y uno repetido (BUG-07) y reserva aceptada a 31 días (BUG-08) y a un fin igual o anterior al inicio (BUG-16).
 6. De la ejecución de los casos de prueba salieron seis bugs más (16 en total): email sin dominio o sin punto aceptado (BUG-11, CP-15), botón de login habilitado antes de que el timer llegue a 0 (BUG-12, CP-78), Completado y Certificado que pasan a En progreso con `comenzar` (BUG-13, CP-62 y CP-63), el curso inscrito sigue listado tras cerrar sesión y volver a entrar (BUG-14, CP-49) el CV que acepta cualquier archivo (BUG-15, CP-58 y CP-88 a CP-90) y la reserva que acepta un fin igual o anterior al inicio (BUG-16, CP-52).
 
-Todo se puede repetir con `npx playwright test tests/api/sondeo.spec.ts` y `npx playwright test tests/e2e/ui-sondeo.spec.ts`.
+Todo se puede repetir con `npx playwright test tests/api` (`enroll.spec.ts` y `sondeo.spec.ts`) y `npx playwright test tests/e2e/ui-sondeo.spec.ts`.
 
 ## Flujos evaluados
 
@@ -27,9 +27,9 @@ Frecuencia y valor/riesgo: A = alto, M = medio, B = bajo.
 | Flujo | REQ | Frecuencia | Valor/Riesgo | ¿Automatizo? | Capa (UI/API/integrado) | Por qué | Estado |
 |---|---|---|---|---|---|---|---|
 | Inscripción a un curso | C02, C03, C04, C06, A02, A03 | A | A | **Sí** | E2E (UI) + API + integrado | Es el flujo central del negocio y la API no aplica la regla del prerrequisito (BUG-02). Es el caso estrella. | E2E hecho (Fase 2, `tests/e2e/inscripcion.spec.ts`); API (Fase 3) e integrado (Fase 4) pendientes. |
-| API `POST /api/enroll` | A01, A02, A03 | A | A | **Sí** | API | Cada código (200, 400, 403, 404) tiene un resultado esperado escrito en la spec. Es barata y estable. | Pendiente (Fase 3): los 4 tests de API de enroll. |
-| Progreso: estados y certificado | P01 a P05 | M | A | **Sí (API)** | API | Tres defectos de integridad confirmados (BUG-05, BUG-06 y BUG-13). Se prueba por API porque no requiere navegar la UI. | Reproducido en `tests/api/sondeo.spec.ts`; los bugs con `test.fail` quedan para la Fase 3. |
-| Sesión y autenticación | S01, S02, L04 | A | A | **Sí (API)** | API | Defecto confirmado (BUG-01). Condiciona los flujos de UI que dependen de estar logueado. Cerrar sesión no reinicia el progreso (BUG-14, REQ-S02), comprobado por UI en CP-49. | Reproducido en `tests/api/sondeo.spec.ts`; el `test.fail` queda para la Fase 3. |
+| API `POST /api/enroll` | A01, A02, A03 | A | A | **Sí** | API | Cada código (200, 400, 403, 404) tiene un resultado esperado escrito en la spec. Es barata y estable. | Hecho (Fase 3, `tests/api/enroll.spec.ts`): camino feliz, sin `courseId`, curso inexistente y body malformado, más el 403 (BUG-02) y el cupo con `GET /api/courses` antes y después (BUG-03), ambos con `test.fail`. |
+| Progreso: estados y certificado | P01 a P05 | M | A | **Sí (API)** | API | Tres defectos de integridad confirmados (BUG-05, BUG-06 y BUG-13). Se prueba por API porque no requiere navegar la UI. | Hecho (Fase 3): BUG-05 y BUG-06 en `tests/api/sondeo.spec.ts`, declarados con `test.fail`. |
+| Sesión y autenticación | S01, S02, L04 | A | A | **Sí (API)** | API | Defecto confirmado (BUG-01). Condiciona los flujos de UI que dependen de estar logueado. Cerrar sesión no reinicia el progreso (BUG-14, REQ-S02), comprobado por UI en CP-49. | Hecho (Fase 3): BUG-01 en `tests/api/sondeo.spec.ts`, declarado con `test.fail`. |
 | Login y rate limiting | L01 a L03 | M | M | No (documentado) | UI | Defectos confirmados (BUG-10 y BUG-12), pero comprobarlos exige esperas de 30 s; quedan como evidencia, no como regresión. | Documentado (CP-23, CP-76 a CP-78, CP-87). |
 | Registro | R01 a R07 | M | M | No (documentado) | API + UI | Tres defectos de bajo impacto (BUG-04, BUG-09, BUG-11). Cada fallo es local y no afecta a otros flujos. | Documentado (CP-01 a CP-20, CP-68 a CP-75). |
 | Listado paginado | N01 a N03 | B | M | No (documentado) | UI | Defecto confirmado (BUG-07), pero no toca el riesgo principal. | Documentado (CP-54 a CP-56). |
@@ -42,7 +42,7 @@ Frecuencia y valor/riesgo: A = alto, M = medio, B = bajo.
 
 - **Lo que SÍ entra** (estado actual entre paréntesis):
   - **E2E (Fase 2), hecho:** inscripción a un curso sin prerrequisito (`Fundamentos de Testing`) desde el catálogo, con Page Object y comprobación visible del resultado.
-  - **API (Fase 3), pendiente:** 4 tests sobre `POST /api/enroll` (camino feliz, sin `courseId`, curso inexistente, body vacío o malformado) y la comprobación del cupo con `GET /api/courses` antes y después. Los bugs confirmados se declararán con `test.fail`.
+  - **API (Fase 3), hecha:** 4 tests de contrato sobre `POST /api/enroll` (camino feliz, sin `courseId`, curso inexistente, body malformado), más el 403 por prerrequisito (BUG-02) y la comprobación del cupo con `GET /api/courses` antes y después (BUG-03). Los bugs confirmados por API (BUG-01 al 06) se declaran con `test.fail(true, 'BUG-XX…')`.
   - **Integrado (Fase 4), pendiente, opción A (REQ-C06):** la API intenta inscribir a un curso con el prerrequisito pendiente, la UI muestra en qué estado queda el catálogo y la API limpia. El dato compartido es el `courseId` del curso y el usuario creado por API.
   - **CI (Fase 5), pendiente:** una suite corriendo en GitHub Actions con Chromium.
   - **Reporte (Fase 6), en curso:** los hallazgos contra la spec ya están en `reporte-de-bugs.md`, con el defecto resaltado en las capturas; falta el README.
