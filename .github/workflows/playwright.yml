@@ -1,0 +1,53 @@
+name: Playwright
+
+# Corre la suite de regresión del proyecto en cada cambio. Sin secretos ni .env: el producto bajo
+# prueba es público (https://playground.calidadsinhumo.com) y los usuarios se generan en cada test.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Typecheck y tests (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Typecheck (tsc --noEmit)
+        run: npx tsc --noEmit
+
+      # Solo Chromium: es el único proyecto de playwright.config.ts
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Alcance del CI: tests/api, tests/e2e y tests/integrado (la suite de regresión).
+      # Fuera del CI, a propósito: tests/evidencia/. Son scripts que MIDEN el producto y generan capturas y
+      # evidencia para docs/ (no afirman nada y algunos usan esperas visuales); se lanzan a demanda en local.
+      # Los bugs conocidos (BUG-01 a BUG-10) están declarados con test.fail(true, 'BUG-XX…'): la suite pasa
+      # mientras el producto siga incumpliendo la spec y se pone roja cuando alguno se corrija.
+      - name: Tests (API, E2E e integrado)
+        run: npm run test:ci
+
+      - name: Subir el reporte de Playwright
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

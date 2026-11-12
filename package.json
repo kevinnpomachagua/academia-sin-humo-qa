@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:list": "playwright test --list",
+    "test:ci": "playwright test tests/api tests/e2e tests/integrado",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
