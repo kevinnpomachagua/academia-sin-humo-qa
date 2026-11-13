@@ -4,6 +4,10 @@ import { test, expect, Page, Locator } from '@playwright/test';
 // No es parte de la suite de regresion: se lanza a demanda con `npx playwright test tests/evidencia`.
 // Datos de prueba generados aqui, sin credenciales reales.
 
+// Espera a que el navegador termine de pintar (dos frames), sin pausas de tiempo fijo.
+const esperarPintado = (page: Page) =>
+  page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
+
 const OUT = 'docs/evidencia';
 const sufijo = () => `${Date.now()}`;
 
@@ -53,7 +57,7 @@ test('CP-01 REQ-R06: el registro exitoso no limpia el formulario', async ({ page
   const registro = page.waitForResponse((r) => r.url().includes('/api/register') && r.request().method() === 'POST');
   await page.getByTestId('register-submit').click();
   expect((await registro).status()).toBe(201);
-  await page.waitForTimeout(800);
+  await esperarPintado(page);
   await page.evaluate(() => window.scrollTo(0, 0));
   for (const campo of ['register-name', 'register-email', 'register-password', 'register-age']) {
     const loc = page.getByTestId(campo);
@@ -75,7 +79,7 @@ test('CP-02 REQ-L03: medir tras cuantos intentos se bloquea el login', async ({ 
     const respuesta = page.waitForResponse((r) => r.url().includes('/api/login') && r.request().method() === 'POST');
     await boton.click({ timeout: 5_000 });
     await respuesta;
-    await page.waitForTimeout(500);
+    await esperarPintado(page);
     console.log(`intento ${intento}: boton deshabilitado = ${await boton.isDisabled()}`);
     if (await boton.isDisabled()) { bloqueadoTras = intento; break; }
   }
@@ -92,7 +96,7 @@ test('CP-04 REQ-N01..N03: la paginacion pierde y repite estudiantes', async ({ p
   await resaltar(page.getByTestId('pagination-info'), 'Debe decir "pagina 1 de 3"');
   await captura(page, 'cp04-pagina1');
   await page.getByTestId('page-next').click();
-  await page.waitForTimeout(800);
+  await esperarPintado(page);
   const filas2 = await page.locator('[data-testid^="student-"]').count();
   console.log(`pagina 2: ${filas2} filas; primero="${await page.locator('[data-testid^="student-"]').first().innerText()}"`);
   await resaltar(page.locator('[data-testid^="student-"]').first(), 'Repetido de la pagina 1');
