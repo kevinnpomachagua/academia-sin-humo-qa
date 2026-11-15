@@ -1,7 +1,6 @@
 ---
 name: verificar-pom
-description: Revisa un Page Object contra la rúbrica POM, ejecuta el test de
-  Playwright indicado y registra evidencia sin modificar el POM ni el test.
+description: Revisa un Page Object contra la rúbrica POM, ejecuta el test de Playwright indicado y registra evidencia sin modificar el POM ni el test.
 ---
 
 # Skill: verificar un Page Object

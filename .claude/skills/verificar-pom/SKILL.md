@@ -1,8 +1,7 @@
 ---
 name: verificar-pom
-description: Revisa un Page Object contra la rúbrica POM, ejecuta el test de
+description: Revisa un Page Object contra la rúbrica POM, ejecuta el test de Playwright indicado y registra evidencia sin modificar el POM ni el test.
 ---
-
 # Puente a la skill original
 
 Esta carpeta es solo un **puente** para que Claude Code registre la skill. Las instrucciones completas y los scripts están en la skill original, compartida con otros agentes (Antigravity):
