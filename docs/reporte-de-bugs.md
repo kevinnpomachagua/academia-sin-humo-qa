@@ -207,7 +207,7 @@ Resumen: 16 discrepancias contra la spec. BUG-01 a BUG-06 se reprodujeron por AP
 - **Pasos para reproducir:**
   1. Abrir `/login` y provocar el bloqueo (4 intentos fallidos con un email inexistente, ver BUG-10).
   2. Observar el botón y el recuadro "Puedes intentar de nuevo en N segundos" cada 100 ms.
-- **Evidencia:** caso CP-78 (muestras `[ms, botón deshabilitado, timer]`: `[24915,true,6],[25005,true,6],[25101,false,5]`) con `tests/evidencia/ejecucion-casos.spec.ts`; CP-24 y CP-77 pasan (botón deshabilitado y timer visible y decreciente). Una exploración previa con otro email también lo habilitó a los ~26 s.
+- **Evidencia:** caso CP-78 (muestras `[ms, botón deshabilitado, timer]`: `[24915,true,6],[25005,true,6],[25101,false,5]`) con `tests/evidencia/ejecucion-casos.spec.ts`; CP-24 mide lo mismo (botón deshabilitado 25101 ms y habilitado con el timer aún en marcha) y también lo reproduce; CP-77 pasa (timer visible y decreciente). Una exploración previa con otro email también lo habilitó a los ~26 s.
 - **Severidad y por qué:** Baja. El bloqueo dura menos de lo documentado, pero la protección sigue existiendo.
 - **Capa donde se detecta:** UI
 
