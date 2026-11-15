@@ -1,58 +1,60 @@
 # Casos de prueba — Academia sin Humo
 
 - **Producto:** https://playground.calidadsinhumo.com
-- **Especificación:** https://playground.calidadsinhumo.com/documentacion (REQ-R01 a REQ-U03, leída el 2026-11-11)
-- **Fecha de ejecución:** 2026-11-11 y 2026-11-12 · cliente: Playwright (Chromium). Los casos de reserva (CP-50 a CP-53, CP-79 a CP-81 y CP-93) calculan sus fechas con "hoy" = 2026-11-12, es decir, se ejecutaron ese día (CP-52 y CP-53 se ejecutaron el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`); el resto de los casos no registra una fecha propia dentro del documento.
+- **Especificación:** https://playground.calidadsinhumo.com/documentacion (REQ-R01 a REQ-U03, leída el 2026-11-11); copia fechada en [`docs/especificacion-req.md`](especificacion-req.md)
+- **Fecha de ejecución:** 2026-11-11, 2026-11-12 y 2026-11-14 · cliente: Playwright (Chromium). Los casos de reserva (CP-50 a CP-53, CP-79 a CP-81 y CP-93) calculan sus fechas con "hoy" = 2026-11-12, es decir, se ejecutaron ese día (CP-52 y CP-53 se ejecutaron el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`); CP-94 y CP-95 se ejecutaron el 2026-11-14; el resto de los casos no registra una fecha propia dentro del documento.
 - **Diseño:** a partir de la especificación, no de la pantalla. Los resultados se midieron con `tests/evidencia/ejecucion-casos.spec.ts` (API y UI); CP-20, CP-23 y CP-54 a CP-56 provienen de la evidencia de `docs/evidencia/` y de `docs/reporte-de-bugs.md`.
 - **Criterio:** "Resultado obtenido" es lo observado; donde no se ejecutó se dice y no se inventa un resultado.
-- **Nota sobre los endpoints:** de la API solo `/api/enroll` aparece en la spec (REQ-A01 a A03). `/api/register`, `/api/login`, `/api/courses`, `/api/progress` y `/api/auth/me` se observaron con DevTools; no vienen de la spec, y sus nombres, acciones (`comenzar`, `completar`, `certificar`, `abandonar`, `retomar`) y códigos de error son inferidos.
+- **Nota sobre los endpoints:** de la API solo `/api/enroll` aparece en la spec (REQ-A01 a A03). `/api/register`, `/api/login`, `/api/courses`, `/api/progress` y `/api/auth/me` se observaron con DevTools; no vienen de la spec, y sus nombres, acciones (`comenzar`, `completar`, `certificar`, `abandonar`, `retomar`) y códigos de error son inferidos. Los códigos de `/api/progress` (200 en las transiciones válidas, 422 o 404 en las rechazadas) son observados, no especificados: por eso los esperados de éxito de ese endpoint dicen "2xx, inferido".
 - **Fechas de reserva (D02/D03):** el servidor calcula "hoy" en UTC, por lo que los casos de fecha calculan "hoy" en UTC (no en hora local de Lima, que va 5 horas por detrás).
 - **Nota sobre "2 MB":** la spec no define el MB; se interpreta como 2 097 152 bytes.
 - **Cuenta de prueba del sitio:** los casos que necesitan login real usan la cuenta que el propio sitio publica en `/login`. Sus credenciales se leen en tiempo de ejecución (`tests/evidencia/cuenta-demo.ts`) y no se guardan ni se imprimen. La cuenta es compartida, así que otras personas pueden haber modificado su estado.
+- **Orden de ejecución y aislamiento:** `tests/evidencia/ejecucion-casos.spec.ts` corre en modo serial (`test.describe.configure({ mode: 'serial' })`), en el orden del archivo, y cada caso solo mide y registra una línea `CPxx|estado|resumen`. Los casos de API y de transiciones crean un usuario nuevo por caso (`/api/register` con email único por marca de tiempo + `/api/login`), así que no dependen del estado de otros casos. Los casos que usan la cuenta compartida del sitio (CP-25, CP-26, CP-49, CP-86 y CP-87) la leen de `/login` en tiempo de ejecución (`tests/evidencia/cuenta-demo.ts`) y dependen de lo que otras personas hayan dejado en ella. El bloqueo de login (CP-24, CP-76 a CP-78 y CP-87) obliga a respetar una espera real; CP-24, CP-77 y CP-78 se miden en un solo test, con un correo inexistente (no con la cuenta compartida); CP-76 usa una cuenta recién registrada y CP-87 la cuenta compartida: el bloqueo dura unos 30 s; tras provocarlo el script reserva un margen de 35 s y la siguiente prueba que lo provoca espera con un sondeo (`expect.poll`, hasta 45 s, sin pausas fijas) a que pasen; CP-87 va al final porque deja bloqueada la cuenta compartida unos 30 s. Por eso CP-24, CP-76, CP-77, CP-78 y CP-87 no se pueden ejecutar de forma independiente justo después de otro bloqueo.
+- **Límites declarados de la cobertura:** (1) De las 25 combinaciones estado × acción de `/api/progress` hay 15 probadas (CP-36 a CP-45 y CP-60 a CP-64: 5 válidas y 10 con rechazo esperado, entre ellas la repetición de `certificar` de CP-45) y 10 sin probar: Inscrito × retomar; En progreso × comenzar y × retomar; Completado × completar y × retomar; Certificado × completar y × retomar; Abandonado × comenzar, × certificar y × abandonar. No se amplía: REQ-P03 define que toda transición no listada se rechaza y las 10 restantes siguen la misma regla que las 10 de rechazo probadas. Es un riesgo declarado: de esas 10 probadas, 4 incumplen la regla (CP-42, CP-45, CP-62 y CP-63: BUG-05, BUG-06 y BUG-13), así que las 10 sin probar podrían incumplirla también. (2) El borde del último cupo libre (1 cupo) no se prueba: no es alcanzable de forma controlada porque el cupo no baja al inscribirse (BUG-03), así que no se puede dejar un curso con exactamente un cupo libre. (3) REQ-R01, REQ-L01, REQ-C02, REQ-C05 y REQ-C06 se cubren por API; la inscripción por UI se cubre con `tests/e2e/inscripcion.spec.ts`, y este documento no añade casos de UI.
 
 ## Resumen
 
-Total: **93** casos · PASA **57** · FALLA **36** · NO EJECUTADO **0**
+Total: **95** casos · PASA **58** · FALLA **37** · NO EJECUTADO **0**
 
 | Técnica | Casos | PASA | FALLA | NO EJECUTADO |
 |---|---|---|---|---|
-| valores límite | 25 | 17 | 8 | 0 |
-| partición | 26 | 16 | 10 | 0 |
+| valores límite | 26 | 18 | 8 | 0 |
+| partición | 27 | 17 | 10 | 0 |
 | tabla de decisión | 16 | 8 | 8 | 0 |
 | transición de estados | 15 | 11 | 4 | 0 |
-| temporal | 6 | 2 | 4 | 0 |
+| temporal | 6 | 1 | 5 | 0 |
 | autorización | 5 | 3 | 2 | 0 |
-| **Total** | **93** | **57** | **36** | **0** |
+| **Total** | **95** | **58** | **37** | **0** |
 
-Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salieron seis bugs nuevos, ya registrados: BUG-11 (email sin dominio o sin punto), BUG-12 (botón de login habilitado unos 5 s antes del timer), BUG-13 (Completado y Certificado pasan a En progreso), BUG-14 (cerrar sesión no reinicia el progreso) BUG-15 (el CV acepta cualquier archivo) y BUG-16 (la reserva acepta un fin igual o anterior al inicio). BUG-08 se reformuló con fechas en UTC: el servidor acepta un inicio a hoy + 31 días y rechaza hoy + 32. CP-30, CP-65, CP-66, CP-82 y CP-84 son nuevas manifestaciones de BUG-02; CP-76 y CP-87 de BUG-10. CP-52 es una nueva manifestación de BUG-16. CP-46 es una observación fuera de la spec. Los 93 casos están ejecutados; CP-52 y CP-53, que al principio quedaron pendientes, se ejecutaron el 2026-11-12.
+Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salieron seis bugs nuevos, ya registrados: BUG-11 (email sin dominio o sin punto), BUG-12 (botón de login habilitado unos 5 s antes del timer), BUG-13 (Completado y Certificado pasan a En progreso), BUG-14 (cerrar sesión no reinicia el progreso) BUG-15 (el CV acepta cualquier archivo) y BUG-16 (la reserva acepta un fin igual o anterior al inicio). BUG-08 se reformuló con fechas en UTC: el servidor acepta un inicio a hoy + 31 días y rechaza hoy + 32. CP-30, CP-65, CP-66, CP-82 y CP-84 son nuevas manifestaciones de BUG-02; CP-76 y CP-87 de BUG-10. CP-52 es una nueva manifestación de BUG-16. CP-46 es una observación fuera de la spec (informativa; no cuenta como cobertura de ningún REQ). Los 95 casos están ejecutados; CP-52 y CP-53, que al principio quedaron pendientes, se ejecutaron el 2026-11-12, y CP-94 y CP-95 (ambos PASA, sin bug nuevo) el 2026-11-14.
 
 ## Matriz de trazabilidad REQ → CP
 
 | REQ | Casos | Cobertura | Observación |
 |---|---|---|---|
-| REQ-R01 | CP-17, CP-18, CP-73, CP-74, CP-75 | Parcial | solo por API; el formulario de `/registro` no se ejercitó con campos vacíos |
+| REQ-R01 | CP-17, CP-18, CP-73, CP-74, CP-75 | Parcial | cubierto por API; el formulario de `/registro` no se ejercitó con campos vacíos |
 | REQ-R02 | CP-01, CP-02, CP-03, CP-04 | Cubierto |  |
 | REQ-R03 | CP-13, CP-14, CP-15, CP-16, CP-68, CP-69, CP-70, CP-71, CP-72 | Cubierto |  |
 | REQ-R04 | CP-05, CP-06, CP-07, CP-08 | Cubierto |  |
 | REQ-R05 | CP-09, CP-10, CP-11, CP-12 | Cubierto |  |
 | REQ-R06 | CP-20 | Cubierto |  |
 | REQ-R07 | CP-19 | Cubierto |  |
-| REQ-L01 | CP-22 | Parcial | solo falta la contraseña (CP-22) y por API; no se probó el email ausente ni el formulario |
+| REQ-L01 | CP-22, CP-94 | Parcial | contraseña ausente (CP-22) y email ausente (CP-94), solo por API; el formulario de `/login` no se ejercitó con campos vacíos |
 | REQ-L02 | CP-21 | Cubierto |  |
 | REQ-L03 | CP-23, CP-24, CP-76, CP-77, CP-78, CP-87 | Cubierto |  |
 | REQ-L04 | CP-25 | Cubierto |  |
 | REQ-C01 | CP-26 | Cubierto |  |
-| REQ-C02 | CP-27, CP-28, CP-29, CP-30, CP-82, CP-83, CP-84, CP-85 | Parcial | las cuatro combinaciones y dos cadenas más, solo por API; la inscripción por UI se cubre en la Fase 2 (E2E) |
+| REQ-C02 | CP-27, CP-28, CP-29, CP-30, CP-82, CP-83, CP-84, CP-85 | Parcial | las cuatro combinaciones y dos cadenas más, cubiertas por API; la inscripción por UI se cubre con `tests/e2e/inscripcion.spec.ts` |
 | REQ-C03 | CP-31, CP-65, CP-66 | Cubierto |  |
 | REQ-C04 | CP-32, CP-67 | Cubierto |  |
-| REQ-C05 | CP-28, CP-67 | Parcial | CP-28 y CP-67 miden el `status` de la API; el badge "Lista de espera" de la UI no se revisó |
-| REQ-C06 | CP-29, CP-30 | Parcial | validado por API (CP-29, CP-30); no se comparó con la UI, que se cubre en la Fase 2 |
-| REQ-P01 | CP-36 a CP-44, CP-60 a CP-64 | Parcial | indirecto: los cinco estados aparecen en las transiciones CP-36 a CP-44 y CP-60 a CP-64 |
-| REQ-P02 | CP-36, CP-37, CP-38, CP-39, CP-40, CP-41, CP-42, CP-43, CP-44, CP-45, CP-60, CP-61, CP-62, CP-63, CP-64 | Parcial | 5 transiciones válidas y 9 prohibidas; no se probaron todas las combinaciones inválidas (p. ej. Abandonado → Certificado) |
-| REQ-P03 | CP-41, CP-42, CP-43, CP-44, CP-60, CP-61, CP-62, CP-63, CP-64 | Cubierto |  |
+| REQ-C05 | CP-28, CP-67 | Parcial | CP-28 y CP-67 miden el `status` de la API; el badge "Lista de espera" de la UI no se revisó (cobertura por API) |
+| REQ-C06 | CP-29, CP-30 | Parcial | validado por API (CP-29, CP-30); la comparación con la UI se cubre con `tests/e2e/inscripcion.spec.ts` y con el flujo integrado de `tests/integrado/` |
+| REQ-P01 | CP-36 a CP-44, CP-60 a CP-64 | Parcial (indirecto) | ningún caso cita REQ-P01 en su campo: los cinco estados solo aparecen en las transiciones CP-36 a CP-44 y CP-60 a CP-64 |
+| REQ-P02 | CP-36, CP-37, CP-38, CP-39, CP-40, CP-41, CP-42, CP-43, CP-44, CP-45, CP-60, CP-61, CP-62, CP-63, CP-64 | Parcial | 5 transiciones válidas y 9 prohibidas, más la repetición de certificar de CP-45 (15 de 25 combinaciones estado × acción); las 10 sin probar están declaradas en la cabecera ("Límites declarados de la cobertura") y siguen la regla de REQ-P03 |
+| REQ-P03 | CP-41, CP-42, CP-43, CP-44, CP-60, CP-61, CP-62, CP-63, CP-64 | Cubierto | 10 combinaciones sin probar (ver "Límites declarados de la cobertura" en la cabecera) |
 | REQ-P04 | CP-45 | Cubierto |  |
 | REQ-P05 | CP-27 | Parcial | solo por API (CP-27: el curso dependiente se puede inscribir); no se vio el catálogo actualizado en la UI |
-| REQ-S01 | CP-46, CP-47, CP-48, CP-86 | Cubierto |  |
+| REQ-S01 | CP-47, CP-48, CP-86 | Cubierto | CP-46 no cuenta: es informativo y está fuera de la spec |
 | REQ-S02 | CP-49 | Cubierto | una sola ejecución (CP-49) con la cuenta de prueba compartida |
 | REQ-A01 | CP-35 | Cubierto |  |
 | REQ-A02 | CP-28, CP-29, CP-34 | Parcial | curso inexistente, cupo y prerequisito por API; no se comparó con las reglas de la UI |
@@ -65,9 +67,9 @@ Cada FALLA enlaza un BUG de `docs/reporte-de-bugs.md`. De esta ejecución salier
 | REQ-N03 | CP-56 | Cubierto |  |
 | REQ-U01 | CP-57 | Cubierto |  |
 | REQ-U02 | CP-57, CP-58, CP-88, CP-91, CP-92 | Cubierto |  |
-| REQ-U03 | CP-59, CP-89, CP-90 | Cubierto |  |
+| REQ-U03 | CP-59, CP-89, CP-90, CP-95 | Cubierto |  |
 
-REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a través de las transiciones entre sus cinco estados). Todos los REQ con casos tienen sus casos ejecutados.
+REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a través de las transiciones entre sus cinco estados). Todos los REQ con casos tienen sus casos ejecutados. Las filas de REQ-R01, REQ-L01, REQ-C02, REQ-C05 y REQ-C06 se cubren por API; la UI de inscripción se cubre con `tests/e2e/inscripcion.spec.ts`.
 
 ---
 
@@ -356,8 +358,8 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Provocar el bloqueo con intentos fallidos.
   2. Muestrear el estado del botón cada 100 ms hasta que se habilite.
 - **Resultado esperado (según la spec):** El botón permanece deshabilitado durante todo el bloqueo.
-- **Resultado obtenido:** bloqueo tras 4 intentos; boton deshabilitado en 250 muestras seguidas durante 25101 ms y habilitado al final. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
-- **Estado:** PASA
+- **Resultado obtenido:** bloqueo tras 4 intentos; boton deshabilitado en 250 muestras seguidas durante 25101 ms y habilitado al final, con el timer visible aún en marcha (unos 5-6 s por llegar a 0), de modo que no permaneció deshabilitado durante los 30 s del bloqueo. Es la misma medición de CP-78. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
+- **Estado:** FALLA → posible bug (BUG-12)
 
 ### CP-25 · Mensaje de bienvenida con el nombre del usuario
 - **Técnica:** partición
@@ -388,12 +390,11 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 ### CP-27 · C02 · Prerequisito completado y cupo disponible → Inscrito
 - **Técnica:** tabla de decisión
 - **REQ que valida:** REQ-C02, REQ-P05
-- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), sin cursos inscritos.
-- **Datos de prueba:** Curso destino y prerequisito según el caso (ver pasos).
+- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), partiendo sin cursos inscritos. Preparación: `fundamentos` inscrito, comenzado y completado (prerequisito de `playwright-cero`).
+- **Datos de prueba:** Curso destino `playwright-cero`; prerequisito `fundamentos` completado.
 - **Pasos:**
-  1. Inscribir `fundamentos`, `comenzar` y `completar`.
-  2. `POST /api/enroll` con `playwright-cero` (hay cupo).
-  3. Leer status y `status` del cuerpo.
+  1. `POST /api/enroll` con `playwright-cero` (hay cupo).
+  2. Leer status y `status` del cuerpo.
 - **Resultado esperado (según la spec):** 200 con `status: "inscrito"`. Completar el prerequisito desbloquea el curso.
 - **Resultado obtenido:** HTTP 200 status=inscrito. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
@@ -401,11 +402,11 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 ### CP-28 · C02 · Prerequisito completado y sin cupo → Lista de espera
 - **Técnica:** tabla de decisión
 - **REQ que valida:** REQ-C02, REQ-C05, REQ-A02
-- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), sin cursos inscritos. Curso con cupo 0 localizado en `GET /api/courses` (`api-testing`, 20/20).
-- **Datos de prueba:** Curso destino y prerequisito según el caso (ver pasos).
+- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), partiendo sin cursos inscritos. Preparación: `fundamentos` y `playwright-cero` completados (comenzar + completar). Curso con cupo 0 localizado en `GET /api/courses` (`api-testing`, 20/20).
+- **Datos de prueba:** Curso destino `api-testing`; prerequisitos `fundamentos` y `playwright-cero` completados.
 - **Pasos:**
-  1. Completar `fundamentos` y `playwright-cero` (comenzar + completar).
-  2. `POST /api/enroll` con `api-testing`.
+  1. `POST /api/enroll` con `api-testing`.
+  2. Leer status y `status` del cuerpo.
 - **Resultado esperado (según la spec):** 200 con `status: "lista-espera"`.
 - **Resultado obtenido:** curso api-testing (20/20); HTTP 200 status=lista-espera. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
@@ -500,7 +501,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Llevar `fundamentos` a Inscrito.
   2. `POST /api/progress` con `action: "comenzar"`.
   3. Leer status, estado resultante.
-- **Resultado esperado (según la spec):** 200; estado En progreso.
+- **Resultado esperado (según la spec):** Éxito (2xx, inferido: la spec no define los códigos de `/api/progress`); estado En progreso.
 - **Resultado obtenido:** accion "comenzar" desde inscrito: HTTP 200, estado resultante=en-progreso. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
 
@@ -513,7 +514,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Llevar `fundamentos` a En progreso.
   2. `POST /api/progress` con `action: "completar"`.
   3. Leer status, estado resultante.
-- **Resultado esperado (según la spec):** 200; estado Completado.
+- **Resultado esperado (según la spec):** Éxito (2xx, inferido: la spec no define los códigos de `/api/progress`); estado Completado.
 - **Resultado obtenido:** accion "completar" desde en-progreso: HTTP 200, estado resultante=completado. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
 
@@ -526,7 +527,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Llevar `fundamentos` a Completado.
   2. `POST /api/progress` con `action: "certificar"`.
   3. Leer status, estado resultante.
-- **Resultado esperado (según la spec):** 200; estado Certificado.
+- **Resultado esperado (según la spec):** Éxito (2xx, inferido: la spec no define los códigos de `/api/progress`); estado Certificado.
 - **Resultado obtenido:** accion "certificar" desde completado: HTTP 200, estado resultante=certificado. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
 
@@ -539,7 +540,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Llevar `fundamentos` a Inscrito.
   2. `POST /api/progress` con `action: "abandonar"`.
   3. Leer status, estado resultante.
-- **Resultado esperado (según la spec):** 200; estado Abandonado.
+- **Resultado esperado (según la spec):** Éxito (2xx, inferido: la spec no define los códigos de `/api/progress`); estado Abandonado.
 - **Resultado obtenido:** accion "abandonar" desde inscrito: HTTP 200, estado resultante=abandonado. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
 
@@ -552,7 +553,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Llevar `fundamentos` a En progreso.
   2. `POST /api/progress` con `action: "abandonar"`.
   3. Leer status, estado resultante.
-- **Resultado esperado (según la spec):** 200; estado Abandonado.
+- **Resultado esperado (según la spec):** Éxito (2xx, inferido: la spec no define los códigos de `/api/progress`); estado Abandonado.
 - **Resultado obtenido:** accion "abandonar" desde en-progreso: HTTP 200, estado resultante=abandonado. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
 
@@ -577,9 +578,9 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 - **Pasos:**
   1. Llevar `fundamentos` a Abandonado.
   2. `POST /api/progress` con `action: "retomar"`.
-  3. Leer status, estado resultante y mensaje de error (solo se verifica que exista, no su texto).
+  3. Leer status, estado resultante y mensaje devuelto (solo se verifica que exista, no su texto).
 - **Resultado esperado (según la spec):** Rechazo (4xx) con mensaje de error; Abandonado es terminal y el estado no cambia.
-- **Resultado obtenido:** accion "retomar" desde abandonado: HTTP 200, estado resultante=en-progreso, mensaje de error="Transición exitosa: abandonado → en-progreso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
+- **Resultado obtenido:** accion "retomar" desde abandonado: HTTP 200, estado resultante=en-progreso, mensaje devuelto="Transición exitosa: abandonado → en-progreso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** FALLA → posible bug (BUG-05)
 
 ### CP-43 · Transición prohibida Completado → Abandonado
@@ -616,22 +617,22 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 - **Pasos:**
   1. Llevar `fundamentos` a Certificado.
   2. Repetir `certificar`.
-  3. Leer status, mensaje de error y `certificates`.
+  3. Leer status, mensaje devuelto y `certificates`.
 - **Resultado esperado (según la spec):** Rechazo (4xx) con mensaje de error, porque Certificado es estado final (REQ-P02), y `certificates` sigue en 1.
-- **Resultado obtenido:** 2.o certificar HTTP 200, certificates=2, mensaje de error="Transición exitosa: certificado → certificado". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
+- **Resultado obtenido:** 2.o certificar HTTP 200, certificates=2, mensaje devuelto="Transición exitosa: certificado → certificado". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** FALLA → posible bug (BUG-06)
 
 ### CP-46 · Observación: /api/auth/me devuelve al usuario tras el login
 - **Técnica:** autorización
-- **REQ que valida:** REQ-S01
+- **REQ que valida:** Ninguno (observación fuera de la spec; REQ-S01 solo como referencia de autenticación)
 - **Precondición:** Usuario nuevo registrado.
 - **Datos de prueba:** Login con las credenciales del alta. Nota: `/api/auth/me` no está en la spec; no es un caso derivado de ella, sino una observación hecha con DevTools (REQ-S01 se cita solo como referencia de autenticación).
 - **Pasos:**
   1. Registrar y hacer login.
   2. `GET /api/auth/me` en el mismo contexto.
 - **Resultado esperado (según la spec):** Criterio de observación (no de la spec): 200 con el usuario autenticado, no `realUser: null`.
-- **Resultado obtenido:** HTTP 200, realUser=null. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
-- **Estado:** FALLA → posible bug (BUG-01; observación, fuera de la spec)
+- **Resultado obtenido:** HTTP 200, realUser=null. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`. Observación fuera de la spec: el criterio no viene de ningún REQ.
+- **Estado:** FALLA → posible bug (BUG-01)
 
 ### CP-47 · /cursos sin sesión pide iniciar sesión
 - **Técnica:** autorización
@@ -702,7 +703,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   2. Repetir con fin = inicio − 1 día.
 - **Resultado esperado (según la spec):** Rechazo en ambos casos.
 - **Resultado obtenido:** inicio=2026-11-17 (hoy + 5): con fin=2026-11-17 (fin = inicio) aparece "Reserva confirmada"; con fin=2026-11-16 (inicio − 1 día) también aparece "Reserva confirmada". El texto "Elige cuándo empiezas. La fecha de inicio debe ser dentro de los próximos 30 días, y la de fin posterior a la de inicio." es una ayuda estática de la página, no un mensaje de error. Ejecutado el 2026-11-12 con `tests/evidencia/ejecucion-reserva-d01-d03.spec.ts`. Evidencia: [cp52-fin-igual-inicio.png](evidencia/cp52-fin-igual-inicio.png).
-- **Estado:** FALLA → BUG-16
+- **Estado:** FALLA → posible bug (BUG-16)
 
 ### CP-53 · Fechas de inicio y fin obligatorias
 - **Técnica:** partición
@@ -824,9 +825,9 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 - **Pasos:**
   1. Llevar `fundamentos` a Completado.
   2. `POST /api/progress` con `action: "comenzar"`.
-  3. Leer status, estado resultante y mensaje de error (solo se verifica que exista, no su texto).
+  3. Leer status, estado resultante y mensaje devuelto (solo se verifica que exista, no su texto).
 - **Resultado esperado (según la spec):** Rechazo (4xx) con mensaje de error; el estado sigue Completado.
-- **Resultado obtenido:** accion "comenzar" desde completado: HTTP 200, estado resultante=en-progreso, mensaje de error="Transición exitosa: completado → en-progreso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
+- **Resultado obtenido:** accion "comenzar" desde completado: HTTP 200, estado resultante=en-progreso, mensaje devuelto="Transición exitosa: completado → en-progreso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** FALLA → posible bug (BUG-13)
 
 ### CP-63 · Transición prohibida Certificado → En progreso
@@ -837,9 +838,9 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 - **Pasos:**
   1. Llevar `fundamentos` a Certificado.
   2. `POST /api/progress` con `action: "comenzar"`.
-  3. Leer status, estado resultante y mensaje de error (solo se verifica que exista, no su texto).
+  3. Leer status, estado resultante y mensaje devuelto (solo se verifica que exista, no su texto).
 - **Resultado esperado (según la spec):** Rechazo (4xx) con mensaje de error; Certificado es final.
-- **Resultado obtenido:** accion "comenzar" desde certificado: HTTP 200, estado resultante=en-progreso, mensaje de error="Transición exitosa: certificado → en-progreso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
+- **Resultado obtenido:** accion "comenzar" desde certificado: HTTP 200, estado resultante=en-progreso, mensaje devuelto="Transición exitosa: certificado → en-progreso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** FALLA → posible bug (BUG-13)
 
 ### CP-64 · Transición prohibida Abandonado → Completado
@@ -852,7 +853,7 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   2. `POST /api/progress` con `action: "completar"`.
   3. Leer status, estado resultante y mensaje de error (solo se verifica que exista, no su texto).
 - **Resultado esperado (según la spec):** Rechazo (4xx) con mensaje de error; Abandonado es terminal.
-- **Resultado obtenido:** accion "completar" desde abandonado: HTTP 404, estado resultante=?, mensaje de error="No estás inscrito en este curso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`. Rechazo con 404 ("No estás inscrito") en vez del 422 de las otras transiciones.
+- **Resultado obtenido:** accion "completar" desde abandonado: HTTP 404, estado resultante=?, mensaje de error="No estás inscrito en este curso". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`. Rechazo con 404 ("No estás inscrito") en vez del 422 de las otras transiciones. Inconsistencia con CP-42: sobre el mismo curso en estado Abandonado, `retomar` se aceptó (HTTP 200, pasó a En progreso, BUG-05), mientras que `completar` se rechazó como si el curso no estuviera inscrito. La respuesta no trajo un campo de estado, por eso el estado resultante no se leyó ("?") y este caso no demuestra que Abandonado siga igual tras el rechazo. No se volvió a ejecutar: la regla de fondo ya la cubren CP-42, BUG-05 y BUG-13.
 - **Estado:** PASA
 
 ### CP-65 · Estar Inscrito no desbloquea el curso dependiente
@@ -882,13 +883,12 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 ### CP-67 · Quedar en lista de espera no reduce el cupo
 - **Técnica:** tabla de decisión
 - **REQ que valida:** REQ-C04, REQ-C05
-- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), sin cursos inscritos. Curso con cupo 0 (`api-testing`, 20/20).
+- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), partiendo sin cursos inscritos. Preparación: `fundamentos` y `playwright-cero` completados (comenzar + completar). Curso con cupo 0 (`api-testing`, 20/20).
 - **Datos de prueba:** Cadena `fundamentos` → `playwright-cero` completada; destino `api-testing`.
 - **Pasos:**
-  1. Completar `fundamentos` y `playwright-cero`.
-  2. Leer `enrolled` de `api-testing`.
-  3. `POST /api/enroll` con `api-testing` (lista de espera).
-  4. Leer `enrolled` otra vez.
+  1. Leer `enrolled` de `api-testing`.
+  2. `POST /api/enroll` con `api-testing` (lista de espera).
+  3. Leer `enrolled` otra vez.
 - **Resultado esperado (según la spec):** `status: "lista-espera"` y `enrolled` sin cambios (no supera el máximo; la espera no consume cupo).
 - **Resultado obtenido:** curso api-testing; status=lista-espera; enrolled antes=20, despues=20 (max 20). Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
@@ -1077,11 +1077,11 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 ### CP-83 · Cadena: Liderazgo QA con Diseño de casos completado → Inscrito
 - **Técnica:** tabla de decisión
 - **REQ que valida:** REQ-C02
-- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), sin cursos inscritos.
-- **Datos de prueba:** Curso destino y prerequisito según el caso (ver pasos).
+- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), partiendo sin cursos inscritos. Preparación: `fundamentos` y `diseno-casos` completados (comenzar + completar).
+- **Datos de prueba:** Curso destino `liderazgo-qa`; prerequisito `diseno-casos` completado (tras `fundamentos`).
 - **Pasos:**
-  1. Completar `fundamentos` y `diseno-casos` (comenzar + completar).
-  2. `POST /api/enroll` con `liderazgo-qa`.
+  1. `POST /api/enroll` con `liderazgo-qa`.
+  2. Leer status y `status` del cuerpo.
 - **Resultado esperado (según la spec):** 200 con `status: "inscrito"` (si hay cupo).
 - **Resultado obtenido:** diseno-casos completado; cupo 14/15; HTTP 200 status=inscrito. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
@@ -1100,11 +1100,11 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 ### CP-85 · Cadena: CI/CD para QA con Playwright desde cero completado → Inscrito
 - **Técnica:** tabla de decisión
 - **REQ que valida:** REQ-C02
-- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), sin cursos inscritos.
-- **Datos de prueba:** Curso destino y prerequisito según el caso (ver pasos).
+- **Precondición:** Usuario nuevo registrado y con sesión iniciada (`/api/register` 201 + `/api/login` 200), partiendo sin cursos inscritos. Preparación: `fundamentos` y `playwright-cero` completados (comenzar + completar).
+- **Datos de prueba:** Curso destino `ci-cd-qa`; prerequisito `playwright-cero` completado (tras `fundamentos`).
 - **Pasos:**
-  1. Completar `fundamentos` y `playwright-cero` (comenzar + completar).
-  2. `POST /api/enroll` con `ci-cd-qa`.
+  1. `POST /api/enroll` con `ci-cd-qa`.
+  2. Leer status y `status` del cuerpo.
 - **Resultado esperado (según la spec):** 200 con `status: "inscrito"` (si hay cupo).
 - **Resultado obtenido:** playwright-cero completado; cupo 8/15; HTTP 200 status=inscrito. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
@@ -1181,8 +1181,8 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
   1. Elegir el archivo y pulsar "Subir CV".
   2. Leer el resultado.
 - **Resultado esperado (según la spec):** Rechazado (sin cabecera PDF no es un PDF).
-- **Resultado obtenido:** PDF de 0 bytes; mensaje: "CV subido correctamente". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
-- **Estado:** FALLA → posible bug (BUG-15; la spec no nombra el archivo vacío, es observación)
+- **Resultado obtenido:** PDF de 0 bytes; mensaje: "CV subido correctamente". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`. Observación: la spec no nombra el archivo vacío.
+- **Estado:** FALLA → posible bug (BUG-15)
 
 ### CP-92 · Subida de CV: la extensión en mayúsculas `CV.PDF` se acepta
 - **Técnica:** partición
@@ -1208,11 +1208,34 @@ REQ sin ningún caso: ninguno (REQ-P01 solo está cubierto de forma indirecta, a
 - **Resultado obtenido:** inicio=2026-12-14, fin=2026-12-17; "Reserva confirmada" no aparece; mensaje: "La fecha de inicio no puede superar los 30 días". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts`.
 - **Estado:** PASA
 
+### CP-94 · Login sin email se rechaza
+- **Técnica:** partición
+- **REQ que valida:** REQ-L01
+- **Precondición:** Ninguna.
+- **Datos de prueba:** Body solo con `password` (`Lima#2026qa`), sin la clave `email`.
+- **Pasos:**
+  1. `POST /api/login` sin `email`.
+- **Resultado esperado (según la spec):** Rechazo (4xx): email y contraseña son obligatorios.
+- **Resultado obtenido:** HTTP 400 {"error":"Email y contraseña son obligatorios"}. Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts` el 2026-11-14.
+- **Estado:** PASA
+
+### CP-95 · Subida de CV: un PDF de 2 097 151 bytes se acepta
+- **Técnica:** valores límite
+- **REQ que valida:** REQ-U03
+- **Precondición:** Navegador en `/perfil` (campo `cv-input` sin atributo `accept`; el texto dice "Solo se acepta un archivo PDF de hasta 2 MB"). Archivos generados en memoria. "2 MB" se interpreta como 2 097 152 bytes porque la spec no define el MB.
+- **Datos de prueba:** `CV_Lucia_Mamani.pdf`: cabecera `%PDF-1.4` y 2 097 151 bytes (límite − 1).
+- **Pasos:**
+  1. Elegir el archivo y pulsar "Subir CV".
+  2. Leer el resultado.
+- **Resultado esperado (según la spec):** Aceptado (el máximo es 2 MB inclusive).
+- **Resultado obtenido:** PDF de 2097151 bytes; mensaje: "CV subido correctamente". Ejecutado con `tests/evidencia/ejecucion-casos.spec.ts` el 2026-11-14. El sitio acepta cualquier tamaño (BUG-15), así que este caso pasa sin que el límite superior esté en juego; sirve de control inferior de CP-59 y CP-89.
+- **Estado:** PASA
+
 ## Paso por el juez
 
-Evaluó un agente de Claude con la rúbrica de la sesión 12 (cobertura, claridad, casos límite y Gherkin adaptado a aptitud de traducción); no fue la skill propia del curso, así que es una autoevaluación asistida. La consigna pide además trazabilidad al REQ; esa dimensión no forma parte de la rúbrica de la sesión 12 y el juez no la puntuó, por lo que su valoración va aparte y es mía.
+La evaluación se realizó mediante un juez de IA (asistido por Claude) con la rúbrica de la clase 09 (sesión 12 de la plataforma de estudio y "S9" en la consigna: cobertura, claridad, casos límite y Gherkin adaptado a aptitud de traducción); no fue la skill propia del curso, así que es una autoevaluación asistida. La consigna pide además trazabilidad al REQ; esa dimensión no forma parte de la rúbrica de la clase 09 y el juez no la puntuó, por lo que su valoración va aparte y es mía.
 
-**Trazabilidad (valoración propia, fuera del puntaje):** los 93 casos tienen su campo "REQ que valida", la matriz REQ → CP recoge la cobertura de cada requisito (con las parciales declaradas) y cada uno de los 36 casos en FALLA enlaza el BUG que lo explica en `docs/reporte-de-bugs.md`.
+**Trazabilidad (valoración propia, fuera del puntaje):** los 95 casos tienen su campo "REQ que valida", la matriz REQ → CP recoge la cobertura de cada requisito (con las parciales declaradas) y cada uno de los 37 casos en FALLA enlaza el BUG que lo explica en `docs/reporte-de-bugs.md`.
 
 ### Puntaje
 
@@ -1245,7 +1268,7 @@ Evaluó un agente de Claude con la rúbrica de la sesión 12 (cobertura, clarida
 | Correcciones de CP-03, 16, 29, 41 a 46 | Aceptado | Eran imprecisiones del propio caso; en CP-45 el 2.º certificar debe rechazarse porque Certificado es estado final |
 | Nota sobre los endpoints | Aceptado, en el encabezado | Solo `/api/enroll` está en la spec; el resto se observó con DevTools |
 | Matriz y Resumen honestos | Aceptado: R01, L01, C02, A02, P02 y otros pasan a cobertura parcial | La cobertura solo por API no es cobertura total |
-| Cadena completa de prerrequisitos (CI/CD, Liderazgo) | Aceptado tras reconsiderar: CP-82 a CP-85 | La usuaria decidió ampliarla; se hace por API con el patrón de la tabla C02 |
+| Cadena completa de prerrequisitos (CI/CD, Liderazgo) | Aceptado tras reconsiderar: CP-82 a CP-85 | Decidí ampliarla; se hace por API con el patrón de la tabla C02 |
 | U02/U03 con archivos reales y 0 bytes | Aceptado tras reconsiderar: CP-57, 58, 59, 88 a 92 | Se exploró `/perfil` y se ejecutan con archivos generados en memoria, sin PDFs reales en disco; el archivo vacío se registra como observación |
 | Edad no numérica, decimal o negativa; nombre vacío o solo espacios | Rechazado | La spec no define su comportamiento; un caso mío inventaría una regla |
 | Inscripción C02, C05 y C06 por UI | Rechazado | Se cubre en la Fase 2 (E2E) |
@@ -1254,7 +1277,26 @@ Evaluó un agente de Claude con la rúbrica de la sesión 12 (cobertura, clarida
 | Separar CP-52, CP-53 y CP-58 por mezclar dos resultados | Rechazado | Cada uno comparte precondición y datos; el motivo queda anotado en el caso (CP-59 sí se dejó con un solo resultado) |
 | Reloj simulado de Playwright para el timer | Rechazado | Con una espera real de 30 s es viable medirlo sin simular el tiempo |
 
-Tras los ajustes el conjunto no se volvió a pasar por el juez. El juez propone; mi criterio gana.
+Tras los ajustes el conjunto no se volvió a pasar por el juez de esta primera evaluación (9/12). Después se evaluó con la skill `verificar-casos-de-prueba`, reconstruida a partir de las notas de la clase 09 (un traductor a Gherkin y un juez con la rúbrica de 4 pilares), ejecutada por un agente de Claude: resultado 8/12 ("revisar") el 2026-11-14. El juez original construido en clase no está en el repositorio, y su puntaje no es comparable punto a punto con el de la evaluación inicial (9/12). Acepté su primera observación y corregí CP-24 a FALLA (BUG-12), porque su propia medición lo demuestra. El detalle y las demás observaciones, que se resolvieron en la segunda ronda (más abajo), están en [`reports/casos-de-prueba-report.md`](../reports/casos-de-prueba-report.md). El juez propone; mi criterio gana.
+
+### Segunda ronda (2026-11-14)
+
+Las demás observaciones del juez reconstruido (8/12) se evaluaron y resolvieron el 2026-11-14. El análisis de las recomendaciones se realizó con la asistencia de Claude como herramienta de apoyo, revisando, ajustando y validando cada decisión bajo mi propio criterio técnico de QA. Con esta ronda de ajustes, el documento pasó de 93 a 95 casos (CP-94 y CP-95, ambos PASA); las cifras del reporte del juez corresponden a la versión de 93 casos.
+
+| Observación | Decisión | Por qué |
+|---|---|---|
+| CP-36 a CP-40 con "200 según la spec" | Aceptada | La spec no define los códigos de `/api/progress`: el esperado pasa a "éxito (2xx, inferido)" y la cabecera lo declara |
+| CP-64 contradice a CP-42 y no leyó el estado | Aceptada parcial | Se anotó la inconsistencia y que el estado no se leyó; no se volvió a ejecutar porque la regla de fondo ya la cubren CP-42, BUG-05 y BUG-13 |
+| 10 de 25 combinaciones estado × acción sin probar | Rechazada la ampliación; aceptada la declaración | REQ-P03 rechaza toda transición no listada y ya hay 10 rechazos probados con esa misma regla (4 de ellos incumplen: BUG-05, BUG-06, BUG-13), por lo que las 10 sin probar quedan como riesgo declarado; la lista exacta está en la cabecera |
+| CP-46 infla REQ-S01 y REQ-P01 | Aceptada | CP-46 queda como caso informativo fuera de la spec y sale de la cobertura de REQ-S01 (CP-47, CP-48, CP-86); REQ-P01 sigue "Parcial (indirecto)" |
+| REQ-L01 sin email ausente | Aceptada | Se añadió CP-94 (PASA) |
+| Último cupo (1 libre) | Rechazada (límite declarado) | No es alcanzable de forma controlada: el cupo no baja al inscribirse (BUG-03) |
+| 2 097 151 bytes | Aceptada | Se añadió CP-95 (PASA; el sitio acepta cualquier tamaño por BUG-15) |
+| Spec no versionada | Aceptada | La copia fechada ya existe en `docs/especificacion-req.md` y se enlaza en la cabecera |
+| Dependencia de estado compartido y espera de 35 s | Aceptada | La cabecera documenta el orden de ejecución y el aislamiento tal como los implementan los scripts |
+| "Mensaje de error" que era un mensaje de éxito | Aceptada | Se renombró a "mensaje devuelto" en CP-42, CP-45, CP-62 y CP-63 y se unificó el formato de Estado, sin cambiar resultados |
+| Aptitud Gherkin | Aceptada parcial | Se mantienen CP-52, CP-53 y CP-58 (dos resultados con la misma precondición); la preparación de CP-27, CP-28, CP-67, CP-83 y CP-85 pasó a la Precondición |
+| Cobertura solo por API (REQ-R01, L01, C02, C05, C06) | Aceptada (se declara) | La matriz lo dice y remite a `tests/e2e/inscripcion.spec.ts` para la UI; no se añaden casos de UI |
 
 ---
 
