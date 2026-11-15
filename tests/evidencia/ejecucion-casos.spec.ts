@@ -232,6 +232,14 @@ test.describe('Ejecucion de casos de prueba (medicion, no afirmacion)', () => {
     });
   });
 
+  test('CP-94 login sin email', async ({ request }, ti) => {
+    await caso('CP-94', async () => {
+      const res = await request.post('/api/login', { data: { password: 'Lima#2026qa' } });
+      const body = await adjuntar(ti, 'login-sin-email', res, { password: '<omitida>' });
+      return { ok: rechazado(res.status()), resumen: `HTTP ${res.status()} ${JSON.stringify(body).slice(0, 80)}` };
+    });
+  });
+
   // Tabla de decision REQ-C02
   test('CP-27 C02 prerequisito Si x cupo Si', async ({ request }, ti) => {
     await caso('CP-27', async () => {
@@ -345,7 +353,7 @@ test.describe('Ejecucion de casos de prueba (medicion, no afirmacion)', () => {
         const r = await progreso(request, 'fundamentos', accion, ti);
         const msg = mensajeDe(r.body);
         const ok = valida ? r.status === 200 : rechazado(r.status) && msg !== '';
-        return { ok, resumen: `accion "${accion}" desde ${desde}: HTTP ${r.status}, estado resultante=${r.estado}${valida ? '' : `, mensaje de error=${msg ? '"' + msg + '"' : 'ausente'}`}` };
+        return { ok, resumen: `accion "${accion}" desde ${desde}: HTTP ${r.status}, estado resultante=${r.estado}${valida ? '' : `, ${rechazado(r.status) ? 'mensaje de error' : 'mensaje devuelto'}=${msg ? '"' + msg + '"' : 'ausente'}`}` };
       });
     });
   }
@@ -356,7 +364,7 @@ test.describe('Ejecucion de casos de prueba (medicion, no afirmacion)', () => {
       await llevarA(request, 'fundamentos', 'certificado', ti);
       const segunda = await progreso(request, 'fundamentos', 'certificar', ti);
       const msg = mensajeDe(segunda.body);
-      return { ok: rechazado(segunda.status) && msg !== '' && (segunda.body?.certificates ?? 1) === 1, resumen: `2.o certificar HTTP ${segunda.status}, certificates=${segunda.body?.certificates}, mensaje de error=${msg ? '"' + msg + '"' : 'ausente'}` };
+      return { ok: rechazado(segunda.status) && msg !== '' && (segunda.body?.certificates ?? 1) === 1, resumen: `2.o certificar HTTP ${segunda.status}, certificates=${segunda.body?.certificates}, ${rechazado(segunda.status) ? 'mensaje de error' : 'mensaje devuelto'}=${msg ? '"' + msg + '"' : 'ausente'}` };
     });
   });
 
@@ -613,6 +621,13 @@ test.describe('Ejecucion Ampliacion II (medicion)', () => {
     await caso('CP-59', async () => {
       const r = await subirCv(page, 'CV_Renzo_Caceres.pdf', 'application/pdf', pdfDe(MB2));
       return { ok: r.aceptado, resumen: `PDF de ${MB2} bytes; ${describirCv(r)}` };
+    });
+  });
+
+  test('CP-95 U03 PDF de 2 097 151 bytes se acepta', async ({ page }) => {
+    await caso('CP-95', async () => {
+      const r = await subirCv(page, 'CV_Lucia_Mamani.pdf', 'application/pdf', pdfDe(MB2 - 1));
+      return { ok: r.aceptado, resumen: `PDF de ${MB2 - 1} bytes; ${describirCv(r)}` };
     });
   });
 
